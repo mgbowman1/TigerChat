@@ -11,8 +11,11 @@ public class Connection extends Thread{
 	private DatagramSocket socket;
 	private byte[] buffer = new byte[10000];
 	
+	// The port number
+	private int port = 11000;
+	
 	public Connection() throws SocketException {
-		socket = new DatagramSocket(11000);
+		socket = new DatagramSocket(port);
 	}
 	
 	@Override
