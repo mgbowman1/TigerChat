@@ -26,18 +26,23 @@ public class UDPPacket {
 	private String JWT;
 	private String data;
 	
+	// Longest allowed data size
+	private int maxDataSize = 9000;
+	
 	public UDPPacket(UDPType type, String JWT, String data) {
 		this.type = type;
 		this.JWT = JWT;
+		if (data.length() > maxDataSize) throw new RuntimeException();
 		this.data = data;
 	}
 	
 	public UDPPacket(byte[] bytes) {
-		if (bytes.length < 6) throw new NumberFormatException();
+		if (bytes.length < 6) throw new RuntimeException();
 		int typeLen = (int) (bytes[0]) * 127 + (int) (bytes[1]);
 		int JWTLen = (int) (bytes[2]) * 127 + (int) (bytes[3]);
 		int dataLen = (int) (bytes[4]) * 127 + (int) (bytes[5]);
-		if (bytes.length != 6 + typeLen + JWTLen + dataLen) throw new NumberFormatException();
+		if (dataLen > maxDataSize) throw new RuntimeException();
+		if (bytes.length != 6 + typeLen + JWTLen + dataLen) throw new RuntimeException();
 		int type = 0;
 		byte[] JWT = new byte[JWTLen];
 		byte[] data = new byte[dataLen];
