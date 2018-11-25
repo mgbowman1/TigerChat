@@ -15,37 +15,36 @@ public class Receiver extends Thread {
 	private DatagramSocket socket;
 	
 	// The port number
-	private int port = 11000;
+	private int port = 12000;
 	
 	// The queue of messages
-	private Queue<DatagramPacket> messages;
+	private Queue<Packet> messages;
 	
 	// The main thread running service
-	ExecutorService main;
+	private ExecutorService main;
 	
 	// Flag for running
 	private boolean running = true;
 	
+	// The maximum message size
+	private int maxMessageSize = 10000;
+	
 	public Receiver(ExecutorService es) throws SocketException {
+		if (System.getProperty("user.dir").contains("current_server")) this.port = 11000;
 		socket = new DatagramSocket(port);
+		socket.setReceiveBufferSize(maxMessageSize);
 		messages = new LinkedList<>();
 		main = es;
 	}
 	
 	public void run() {
 		while (running) {
-			byte[] buffer = new byte[10000];
+			byte[] buffer = new byte[maxMessageSize];
 			DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
 			try {
 				socket.receive(packet);
-				byte[] arr = packet.getData();
-				for (int i = 0; i < arr.length; i++) {
-					if (arr[i] == 0) {
-						packet.setLength(i);
-						break;
-					}
-				}
-				messages.add(packet);
+				Packet p = new Packet(packet);
+				messages.add(p);
 				synchronized (main) {
 					main.notify();
 				}
@@ -57,7 +56,7 @@ public class Receiver extends Thread {
 		socket.close();
 	}
 	
-	public DatagramPacket getNextMessage() {
+	public Packet getNextMessage() {
 		return messages.poll();
 	}
 	

@@ -1,7 +1,6 @@
 package server;
 
 import java.io.IOException;
-import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -18,15 +17,10 @@ public class Server {
 				synchronized (es) {
 					es.wait();
 				}
-				DatagramPacket packet = r.getNextMessage();
-				byte[] arr = new byte[packet.getLength()];
-				for (int i = 0; i < arr.length; i++) {
-					arr[i] = packet.getData()[i];
-				}
-				String str = new String(arr);
-				Sender s = new Sender(packet.getAddress(), packet.getPort() - 1);
-				System.out.println("Received message: " + str + " from " + packet.getAddress().toString() + ":" + packet.getPort());
-				s.send(str + " from the server.");
+				Packet packet = r.getNextMessage();
+				Sender s = new Sender(packet.getSender(), packet.getSenderPort() - 1);
+				System.out.println("Received message: " + packet.getMessage() + " with error: " + packet.getError() + " from " + packet.getSender().toString() + ":" + packet.getSenderPort());
+				s.send(packet.getMessage() + " from the server.");
 				s.destroy();
 			}
 		} catch (IOException | InterruptedException e) {

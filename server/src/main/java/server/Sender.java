@@ -25,7 +25,7 @@ public class Sender {
 	}
 	
 	public void send(String message) throws IOException {
-		this.send(message.getBytes());
+		this.send(new Packet(message).getBytes());
 	}
 	
 	public void destroy() {
