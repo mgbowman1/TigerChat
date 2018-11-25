@@ -3,7 +3,7 @@ package server;
 import java.net.DatagramPacket;
 import java.net.InetAddress;
 
-public class Packet {
+public class UDPPacket {
 	
 	// The sending IP and port
 	private InetAddress sender;
@@ -18,17 +18,22 @@ public class Packet {
 	 */
 	private int error;
 	
-	public Packet(String message) {
+	public UDPPacket(String message) {
 		this.message = message;
 		this.error = 0;
 	}
 	
-	public Packet(int error) {
+	public UDPPacket(int error) {
 		this.message = "";
 		this.error = error;
 	}
 	
-	public Packet(DatagramPacket p) {
+	public UDPPacket(String message, int error) {
+		this.message = message;
+		this.error = error;
+	}
+	
+	public UDPPacket(DatagramPacket p) {
 		int index = 4;
 		byte[] data = p.getData();
 		while (data[index] != 0) {
