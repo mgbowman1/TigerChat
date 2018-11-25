@@ -1,4 +1,4 @@
-# TigerChat
+# TigerChat :tiger:
 Chat with your fellow tigers.
 
 ## Requirements:
