@@ -1,20 +1,26 @@
 import sys
+import os
 from datetime import datetime as dt
-from PyQt5.QtWidgets import (QApplication, QLineEdit, QLabel, QMainWindow,
-                             QPushButton, QHBoxLayout, QDockWidget,
+from PyQt5.QtWidgets import (QApplication, QLineEdit, QMainWindow, QPushButton,
+                             QHBoxLayout, QDockWidget,
                              QListWidget, QTextEdit, QVBoxLayout, QWidget)
 from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QIcon
+from message_thread import MessageWorker
 
 
 class chatHistory(QTextEdit):
     def __init__(self, parent=None):
         super(chatHistory, self).__init__(parent)
-        last_msg = dt.today()
+        self.last_msg = dt.today()
 
 
 class chatWindow(QMainWindow):
     def __init__(self, parent=None):
         super(chatWindow, self).__init__(parent)
+        script_dir = sys.path[0]
+        img_path = os.path.join(script_dir, './resources/tiger.png')
+        self.setWindowIcon(QIcon(img_path))
         self.title = 'TigerChat'
         self.left = 200
         self.top = 100
@@ -23,7 +29,7 @@ class chatWindow(QMainWindow):
         self.initUI()
 
     def initUI(self):
-        self.statusBar().showMessage('Ready')
+        self.statusBar().showMessage('Connecting...')
         self.setGeometry(self.left, self.top, self.width, self.height)
         self.setWindowTitle(self.title)
         self.centralWidget = QWidget()
@@ -31,6 +37,7 @@ class chatWindow(QMainWindow):
 
         # Widgets
         self.conversationHistory = chatHistory(self)
+        self.conversationHistory.setReadOnly(True)
         self.textbox = QLineEdit(self)
         self.textbox.resize(260, 40)
         self.sendBtn = QPushButton(self)
@@ -58,24 +65,44 @@ class chatWindow(QMainWindow):
         # start all
         self.textbox.setFocus()
         self.show()
+        self.m_thread = MessageWorker()
+        self.m_thread.start()
+        self.m_thread.conn_est.connect(self.connection_established)
 
     def send_clicked(self):
         msg = self.textbox.text()
         if (len(msg) > 0):
+            # if mesg within 5 min, no new time stamp
             now = dt.today()
-            # if thismsgtime - lastmsgtime > 5min : add new timestamp
-            # if (now - self.textbox.last_msg > )
-            now = dt.today().strftime('%d, %b %Y at %H:%M')
+            diff = now - self.conversationHistory.last_msg
+            if ((diff.total_seconds() * 1000) > 30000):
+                nowfmt = dt.today().strftime('%d, %b %Y at %H:%M')
+                self.conversationHistory.append('\n' + nowfmt)
+                self.conversationHistory.setAlignment(Qt.AlignCenter)
+            self.conversationHistory.append('you: ' + msg)
+            self.conversationHistory.setAlignment(Qt.AlignLeft)
+            self.conversationHistory.last_msg = now
             self.textbox.clear()
-            self.conversationHistory.append(now)
-            self.conversationHistory.append(msg)
+            self.textbox.setFocus()
+            self.statusBar().showMessage("Sending message")
+            self.m_thread.sendMessage(msg)
+            self.m_thread.msg_sent.connect(self.message_delivered)
+
+    def keyPressEvent(self, QKeyEvent):
+        if (QKeyEvent.key() == Qt.Key_Return):
+            self.send_clicked()
+
+    def connection_established(self):
+        self.statusBar().showMessage("Connected.")
+
+    def message_delivered(self):
+        self.statusBar().showMessage("Message delivered.", 3000)
 
 
 def start():
     app = QApplication(sys.argv)
     app.setStyle('Fusion')
     w = chatWindow()
-    # w.update()
     sys.exit(app.exec_())
 
 
