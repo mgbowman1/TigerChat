@@ -123,8 +123,7 @@ public class UDPPacket {
 	}
 	
 	public PacketError getError() {
-		if (error == 0) return null;
-		return PacketError.values()[error - 1];
+		return PacketError.values()[error];
 	}
 	
 	public InetAddress getSender() {

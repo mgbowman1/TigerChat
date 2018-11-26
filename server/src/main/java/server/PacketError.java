@@ -1,6 +1,7 @@
 package server;
 
 public enum PacketError {
+	NOERROR(0),
 	BADLOGIN(1),
 	MALFORMEDPACKET(2),
 	DATABASEERROR(3),

@@ -19,7 +19,7 @@ public abstract class UDPConnection extends Thread {
 	protected int port;
 	
 	// The max message size and timeout time
-	private int maxMessageSize = 10000;
+	private int maxMessageSize = 2048;
 	private int timeout = 500;
 	
 	// Running flag to keep the thread going
@@ -37,6 +37,8 @@ public abstract class UDPConnection extends Thread {
 	
 	// The last packet received from a client
 	private DatagramPacket lastReceived;
+	
+	private boolean first = false;
 	
 	public UDPConnection(int port) throws SocketException, SQLException, UnknownHostException {
 		this.port = port;
@@ -61,6 +63,7 @@ public abstract class UDPConnection extends Thread {
 			System.out.println("Received message: " + udp.getMessage() + " with error: " + udp.getError() + " from " + udp.getSender() + ":" + udp.getSenderPort());
 			try {
 				messageHandler(udp);
+				this.first = true;
 			} catch (IOException | SQLException e) {
 				e.printStackTrace();
 				continue;
@@ -79,6 +82,10 @@ public abstract class UDPConnection extends Thread {
 	}
 	
 	protected UDPPacket receive() {
+		if (first && socket.isClosed()) {
+			this.shutdown();
+			return null;
+		}
 		byte[] buffer = new byte[maxMessageSize];
 		DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
 		try {
@@ -89,6 +96,7 @@ public abstract class UDPConnection extends Thread {
 			byte[] b = ack.getBytes();
 			DatagramPacket packet2 = new DatagramPacket(b, b.length, p.getSender(), p.getSenderPort());
 			socket.send(packet2);
+			waitReceive(packet, ack);
 			failedReads = 0;
 			if (datagramsEqual(lastReceived, packet)) return null;
 			else {
@@ -105,7 +113,32 @@ public abstract class UDPConnection extends Thread {
 		}
 	}
 	
+	private void waitReceive(DatagramPacket packet, UDPPacket ack) {
+		if (first && socket.isClosed()) {
+			this.shutdown();
+			return;
+		}
+		byte[] buffer = new byte[maxMessageSize];
+		DatagramPacket p = new DatagramPacket(buffer, buffer.length);
+		UDPPacket p2 = new UDPPacket(packet);
+		try {
+			socket.receive(p);
+			if (datagramsEqual(p, packet)) {
+				byte[] b = ack.getBytes();
+				DatagramPacket packet2 = new DatagramPacket(b, b.length, p2.getSender(), p2.getSenderPort());
+				socket.send(packet2);
+				waitReceive(packet, ack);
+			}
+		} catch (IOException e) {
+			return;
+		}
+	}
+	
 	protected boolean send(DatagramPacket packet) {
+		if (first && socket.isClosed()) {
+			this.shutdown();
+			return false;
+		}
 		try {
 			int attempts = 0;
 			while (attempts < maxFailedReads) {
@@ -115,8 +148,8 @@ public abstract class UDPConnection extends Thread {
 					DatagramPacket p = new DatagramPacket(buffer, buffer.length);
 					socket.receive(p);
 					UDPPacket pack = new UDPPacket(p);
-					if (pack.getMessage().equals("Ack " + Long.toString(packetNumber))) return true;
-					else if (pack.getError().equals(PacketError.MISSEDPACKET)) attempts = -1;
+					if (pack.getError().equals(PacketError.MISSEDPACKET)) attempts = -1;
+					else if (pack.getMessage().equals("Ack " + Long.toString(packetNumber))) return true;
 					attempts++;
 				} catch (SocketTimeoutException e) {
 					attempts++;
@@ -173,6 +206,14 @@ public abstract class UDPConnection extends Thread {
 	
 	public void shutdown() {
 		running = false;
+		try {
+			socket.receive(new DatagramPacket(new byte[0], 0));
+		} catch (IOException e) {
+		}
+		try {
+			socket.receive(new DatagramPacket(new byte[0], 0));
+		} catch (IOException e) {
+		}
 		socket.close();
 	}
 
