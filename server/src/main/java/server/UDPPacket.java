@@ -9,6 +9,9 @@ public class UDPPacket {
 	private InetAddress sender;
 	private int senderPort;
 	
+	// The packet number
+	private long packetNumber;
+	
 	// The actual message being sent
 	private String message;
 	
@@ -18,57 +21,110 @@ public class UDPPacket {
 	 */
 	private int error;
 	
-	public UDPPacket(String message) {
+	public UDPPacket(String message, long packetNumber) {
 		this.message = message;
 		this.error = 0;
+		this.packetNumber = packetNumber;
 	}
 	
-	public UDPPacket(int error) {
+	public UDPPacket(PacketError error, long packetNumber) {
 		this.message = "";
-		this.error = error;
+		this.error = error.getValue();
+		this.packetNumber = packetNumber;
 	}
 	
-	public UDPPacket(String message, int error) {
+	public UDPPacket(String message, PacketError error, long packetNumber) {
 		this.message = message;
-		this.error = error;
+		this.error = error.getValue();
+		this.packetNumber = packetNumber;
 	}
 	
 	public UDPPacket(DatagramPacket p) {
-		int index = 4;
 		byte[] data = p.getData();
-		while (data[index] != 0) {
-			index++;
+		int messageSize = (data[0] << 8) + data[1];
+		byte[] buffer = new byte[messageSize];
+		for (int i = 0; i < buffer.length; i++) {
+			buffer[i] = data[i + 14];
 		}
-		index -= 4;
-		byte[] buffer = new byte[index];
-		for (int i = 0; i < index; i++) {
-			buffer[i] = data[i + 4];
+		byte[] err = new byte[4];
+		byte[] num = new byte[8];
+		for (int i = 0; i < err.length; i++) {
+			err[i] = data[i + 2];
+		}
+		for (int i = 0; i < num.length; i++) {
+			num[i] = data[i + err.length + 2];
 		}
 		this.message = new String(buffer);
-		this.error = data[3] + (data[2] << 8) + (data[1] << 16) + (data[0] << 24);
+		this.error = getInt(err);
+		this.packetNumber = getLong(num);
 		this.sender = p.getAddress();
 		this.senderPort = p.getPort();
 	}
 	
-	public byte[] getBytes() {
-		byte[] mes = message.getBytes();
-		byte[] finalArr = new byte[4 + mes.length];
-		finalArr[0] = (byte) (error >>> 24);
-		finalArr[1] = (byte) (error >>> 16);
-		finalArr[2] = (byte) (error >>> 8);
-		finalArr[3] = (byte) error;
-		for (int i = 4; i < finalArr.length; i++) {
-			finalArr[i] = mes[i - 4];
+	private byte[] getBytes(int i) {
+		byte[] b = new byte[4];
+		b[0] = (byte) (i >>> 24);
+		b[1] = (byte) (i >>> 16);
+		b[2] = (byte) (i >>> 8);
+		b[3] = (byte) i;
+		return b;
+	}
+	
+	private byte[] getBytes(long i) {
+		byte[] b = new byte[8];
+		b[0] = (byte) (i >>> 56);
+		b[1] = (byte) (i >>> 48);
+		b[2] = (byte) (i >>> 40);
+		b[3] = (byte) (i >>> 32);
+		b[4] = (byte) (i >>> 24);
+		b[5] = (byte) (i >>> 16);
+		b[6] = (byte) (i >>> 8);
+		b[7] = (byte) i;
+		return b;
+	}
+	
+	private int getInt(byte[] b) {
+		int total = 0;
+		for (int i = 0; i < b.length; i++) {
+			total += (b[i] << (8 * (b.length - i - 1)));
 		}
-		return finalArr;
+		return total;
+	}
+	
+	private long getLong(byte[] b) {
+		long total = 0;
+		for (int i = 0; i < b.length; i++) {
+			total += (b[i] << (8 * (b.length - i - 1)));
+		}
+		return total;
+	}
+	
+	private byte[] combineBytes(byte[] a, byte[] b) {
+		byte[] c = new byte[a.length + b.length];
+		for (int i = 0; i < a.length; i++) {
+			c[i] = a[i];
+		}
+		for (int i = 0; i < b.length; i++) {
+			c[i + a.length] = b[i];
+		}
+		return c;
+	}
+	
+	public byte[] getBytes() {
+		return combineBytes(combineBytes(combineBytes(new byte[] {(byte) (message.length() >>> 8), (byte) message.length()}, getBytes(error)), getBytes(packetNumber)), message.getBytes());
+	}
+	
+	public long getPacketNumber() {
+		return packetNumber;
 	}
 	
 	public String getMessage() {
 		return message;
 	}
 	
-	public int getError() {
-		return error;
+	public PacketError getError() {
+		if (error == 0) return null;
+		return PacketError.values()[error - 1];
 	}
 	
 	public InetAddress getSender() {
