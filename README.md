@@ -24,7 +24,7 @@ datagrams and the data portion of these datagrams will contain RDP datagrams.
 
 ## Structure
 
-Total size of headers: 17 bytes
+Total size of headers: 16 bytes
 
 Header | Bytes
 -------|-------
@@ -32,7 +32,6 @@ Sequence | 4 bytes
 Acknoweledgment | 4 bytes
 Head | 4 bytes
 Tail | 4 bytes
-Length | 1 byte
 
 ## Flow Control
 
@@ -66,7 +65,7 @@ RDP implements a congestion avoidance scheme similar to that of TCP Reno, using 
 
 ### Sending/Receiving a Datagram
 
-System A builds a datagram and sends it over the network to System B as well as tracking it as a pending datagram. If System B receives the datagram, it will build and send an acknowledgement datagram back to System A. After this, System B will remove the excess length from the data and forward it to the next layer. If System A receives the acknowledgement, it will remove the datagram from the list of pending datagrams. In the case that the original datagram is lost, after a timeout occurs, System A will immediately resend the datagram before resuming regular operation. If the acknowledgement is lost then, after receiving three acknowledgements for later datagrams or when a timeout occurs, System A will resend the datagram. If three timeouts occur for either system, they will assume the connection is lost.  
+System A builds a datagram and sends it over the network to System B as well as tracking it as a pending datagram. If System B receives the datagram, it will build and send an acknowledgement datagram back to System A. After this, System B will process the datagram and forward it to the next layer. If System A receives the acknowledgement, it will remove the datagram from the list of pending datagrams. In the case that the original datagram is lost, after a timeout occurs, System A will immediately resend the datagram before resuming regular operation. If the acknowledgement is lost then, after receiving three acknowledgements for later datagrams or when a timeout occurs, System A will resend the datagram. If three timeouts occur for either system, they will assume the connection is lost.  
 Each transmission round, the number of datagrams to be sent will be determined by the send window. Each of these datagrams will be sent and placed into a list of pending datagrams. System A will then process received datagrams, listening for acknowledgements to each pending datagram. Until every datagram in the pending list has been acknowledged, System A will not enter another transmission round.
 
 ### Fragmented Datagrams
@@ -77,7 +76,7 @@ When processing a fragmented datagram stream, the head # of the datagram will be
 
 The application layer protocol used by TigerChat. It enables both message and file
 transmission. Tiger Transfer Protocol is built to manage network operations for
-TigerChat. The MTU is 512 bytes with 486 bytes of data.
+TigerChat. The MTU is 512 bytes with 487 bytes of data.
 
 ## Structure
 
@@ -107,7 +106,7 @@ The Data structures are as follows:
 
 * File: `File Data`
 
-* File Information: `Sender ID | Conversation ID | Timestamp | Filename | Size`
+* File Information: `Sender ID | Conversation ID | Timestamp | Size | Filename`
 
 * Request Message from Client: `Conversation ID | Message Block Number`
 
@@ -115,7 +114,9 @@ The Data structures are as follows:
 
 * Fragment Progress: `File ID | Received Percentage`
 
-* Connect: `Username | Password`
+* Connect from Client: `Username | Password`
+
+* Connect from Server: `Port`
 
 * Close: `(no data)`
 
@@ -139,7 +140,7 @@ A human readable file format for transmitting fixed-dynamic structured data for 
 
 A TON object is formatted as follows:
 
-	[{Sender ID, Conversation ID, Timestamp, " Escaped Message "}, { ... }]
+	[{Sender ID,Conversation ID,Timestamp," Escaped Message "},{ ... }]
 
 * The Sender ID is a number that identifies the sender of the message.
 * The Conversation ID is a number that identifies the conversation the message is in.
