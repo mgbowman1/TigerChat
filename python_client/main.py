@@ -13,14 +13,15 @@ class chatHistory(QTextEdit):
     def __init__(self, parent=None):
         super(chatHistory, self).__init__(parent)
         self.last_msg = dt.today()
+        self.setStyleSheet("background-color: #ffcc80; color: black; font-size: 12px")
 
 
 class chatWindow(QMainWindow):
     def __init__(self, parent=None):
         super(chatWindow, self).__init__(parent)
-        script_dir = sys.path[0]
-        self.img_path = os.path.join(script_dir, './resources/tiger.png')
-        self.setWindowIcon(QIcon(self.img_path))
+        favicon_dir = sys.path[0]
+        self.fav_path = os.path.join(favicon_dir, './resources/favicon.png')
+        self.setWindowIcon(QIcon(self.fav_path))
         self.title = 'TigerChat'
         self.left = 200
         self.top = 100
@@ -28,10 +29,11 @@ class chatWindow(QMainWindow):
         self.height = 600
         window = self
         window.setObjectName("window")
-        self.setStyleSheet("#window { background-image: url(Tiger Pattern.png); background-attachment: fixed;}")
+        self.setStyleSheet("#window { background-image: url(./resources/TigerStripe.svg); background-attachment: local;}")
         self.initUI()
 
     def initUI(self):
+        self.statusBar().setStyleSheet("color: white; font-weight: bold; font-size: 14px")
         self.statusBar().showMessage('Connecting...')
         self.setGeometry(self.left, self.top, self.width, self.height)
         self.setWindowTitle(self.title)
@@ -43,6 +45,7 @@ class chatWindow(QMainWindow):
         # Widgets
         self.conversation_partner = QLabel(self)
         self.conversation_partner.setText("Pick a convesation partner")
+        self.conversation_partner.setStyleSheet("color: white; font-weight: bold; font-size: 14px")
         self.conversationHistory = chatHistory(self)
         self.conversationHistory.setReadOnly(True)
         self.textbox = QLineEdit(self)
@@ -64,10 +67,20 @@ class chatWindow(QMainWindow):
         self.v_box.addLayout(self.h_box)
 
         # Conversations Dock
-        self.conversations = QDockWidget('Conversations', self)
+        self.conversations = QDockWidget('', self)
+        self.conversations.setFixedWidth(self.width * .3)
+        self.dock_box = QWidget()
+        self.dock_layout = QVBoxLayout()
+        self.dock_layout.setContentsMargins(15, 15, 15, 15)
+        self.dock_label = QLabel(self.conversations)
+        self.dock_label.setText("Conversations")
+        self.dock_label.setStyleSheet("color: white; font-weight: bold; font-size: 14px;")
         self.conversation_list = QListWidget()
         self.conversation_list.addItem('No conversations to show.')
-        self.conversations.setWidget(self.conversation_list)
+        self.conversation_list.setStyleSheet("background-color: #ffcc80")
+        self.dock_layout.addWidget(self.conversation_list)
+        self.dock_box.setLayout(self.dock_layout)
+        self.conversations.setWidget(self.dock_box)
         self.conversations.setFloating(False)
         self.conversations.setFeatures(QDockWidget.NoDockWidgetFeatures)
         self.addDockWidget(Qt.LeftDockWidgetArea, self.conversations)
@@ -76,6 +89,7 @@ class chatWindow(QMainWindow):
         # start all
         self.textbox.setFocus()
         self.show()
+
         # self.m_thread = MessageWorker()
         # self.m_thread.start()
         # self.m_thread.conn_est.connect(self.connection_established)
@@ -104,8 +118,8 @@ class chatWindow(QMainWindow):
                 self.textbox.clear()
                 self.textbox.setFocus()
                 self.statusBar().showMessage("Sending message")
-                self.m_thread.sendMessage(msg)
-                self.m_thread.msg_sent.connect(self.message_delivered)
+                # self.m_thread.sendMessage(msg)
+                # self.m_thread.msg_sent.connect(self.message_delivered)
 
     def keyPressEvent(self, QKeyEvent):
         if (QKeyEvent.key() == Qt.Key_Return):
