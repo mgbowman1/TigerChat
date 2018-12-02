@@ -39,7 +39,7 @@ public class TON {
 							message += s.charAt(index++);
 							if (s.charAt(index) == '"' && s.charAt(index - 1) == '\\') message += s.charAt(index++);
 						}
-						entries.add(new Entry(Integer.parseInt(senderID), Integer.parseInt(conversationID), timestamp, message));
+						entries.add(new Entry(senderID, conversationID, timestamp, message));
 						entries.getLast().unEscape();
 						index += 3;
 					} else break;
@@ -50,7 +50,7 @@ public class TON {
 		}
 	}
 	
-	public void addEntry(int senderID, int conversationID, String timestamp, String message) {
+	public void addEntry(String senderID, String conversationID, String timestamp, String message) {
 		this.entries.add(new Entry(senderID, conversationID, timestamp, message));
 	}
 	
@@ -65,12 +65,12 @@ public class TON {
 	}
 
 	private class Entry {
-		private int senderID;
-		private int conversationID;
+		private String senderID;
+		private String conversationID;
 		private String timestamp;
 		private String message;
 		
-		public Entry(int senderID, int conversationID, String timestamp, String message) {
+		public Entry(String senderID, String conversationID, String timestamp, String message) {
 			this.senderID = senderID;
 			this.conversationID = conversationID;
 			this.timestamp = timestamp;
@@ -80,9 +80,9 @@ public class TON {
 		public byte[] getBytes() {
 			try {
 				return Utility.mergeBytes(new byte[][] {
-					Integer.toString(senderID).getBytes("UTF-8"),
+					senderID.getBytes("UTF-8"),
 					COMMA,
-					Integer.toString(conversationID).getBytes("UTF-8"),
+					conversationID.getBytes("UTF-8"),
 					COMMA,
 					timestamp.getBytes("UTF-8"),
 					COMMA,
