@@ -13,7 +13,7 @@ public class RDPDatagram {
 	private byte[] data;
 	
 	// Datagram sequence number tracker
-	private static int currentSequenceNumber = 0;
+	private static int currentSequenceNumber = 1;
 	
 	public RDPDatagram(byte[] bytes) {
 		this.sequence = Utility.byteToInt(bytes, 0);
@@ -28,6 +28,15 @@ public class RDPDatagram {
 		this.acknowledgement = acknowledgement;
 		this.head = head;
 		this.tail = tail;
+		if (packet == null) this.data = new byte[0];
+		else this.data = packet.getBytes();
+	}
+	
+	public RDPDatagram(int acknowledgement, int fragDistance, TTPPacket packet) {
+		this.sequence = getNextSequenceNumber();
+		this.acknowledgement = acknowledgement;
+		this.head = this.sequence;
+		this.tail = this.head + fragDistance;
 		this.data = packet.getBytes();
 	}
 	
@@ -65,7 +74,15 @@ public class RDPDatagram {
 	}
 	
 	private static int getNextSequenceNumber() {
+		if (currentSequenceNumber == Integer.MAX_VALUE) {
+			currentSequenceNumber = 0;
+			return Integer.MAX_VALUE;
+		}
 		return currentSequenceNumber++;
+	}
+	
+	public static void resetSequenceIfLarger(int size) {
+		if (currentSequenceNumber + size > Integer.MAX_VALUE) currentSequenceNumber = 0;
 	}
 
 }

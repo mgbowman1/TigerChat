@@ -21,13 +21,13 @@ public class TTPPacket {
 	}
 	
 	// MSG
-	public TTPPacket(int senderID, int conversationID, String timestamp, String message) {
+	public TTPPacket(String senderID, String conversationID, String timestamp, String message) {
 		this.flag = FlagType.MSG;
 		try {
 			this.data = Utility.mergeBytes(new byte[][] {
-				Integer.toString(senderID).getBytes("UTF-8"),
+				senderID.getBytes("UTF-8"),
 				DELIMARR,
-				Integer.toString(conversationID).getBytes("UTF-8"),
+				conversationID.getBytes("UTF-8"),
 				DELIMARR,
 				timestamp.getBytes("UTF-8"),
 				DELIMARR,
@@ -38,13 +38,13 @@ public class TTPPacket {
 	}
 	
 	// INF
-	public TTPPacket(int senderID, int conversationID, String timestamp, String fileName, int size) {
+	public TTPPacket(String senderID, String conversationID, String timestamp, String fileName, int size) {
 		this.flag = FlagType.INF;
 		try {
 			this.data = Utility.mergeBytes(new byte[][] {
-				Integer.toString(senderID).getBytes("UTF-8"),
+				senderID.getBytes("UTF-8"),
 				DELIMARR,
-				Integer.toString(conversationID).getBytes("UTF-8"),
+				conversationID.getBytes("UTF-8"),
 				DELIMARR,
 				timestamp.getBytes("UTF-8"),
 				DELIMARR,
@@ -74,14 +74,24 @@ public class TTPPacket {
 		this.data = new byte[0];
 	}
 	
+	// CON with port
+	public TTPPacket(int port) {
+		this.flag = FlagType.CON;
+		this.data = Utility.intToByte(port);
+	}
+	
 	// Missing CLS for client
 	
 	// Missing CCV for client
 	
 	// CCV
-	public TTPPacket(int conversationID) {
+	public TTPPacket(String conversationID) {
 		this.flag = FlagType.CCV;
-		this.data = Utility.intToByte(conversationID);
+		try {
+			this.data = conversationID.getBytes("UTF-8");
+		} catch (UnsupportedEncodingException e) {
+			e.printStackTrace();
+		}
 	}
 	
 	// Convert most any packet into a hashmap

@@ -56,4 +56,21 @@ public class Utility {
 		return ret;
 	}
 	
+	public static byte[] splitBytes(byte[] arr, int begin, int end) {
+		byte[] ret = new byte[end - begin];
+		for (int i = 0; i < ret.length; i++) {
+			ret[i] = arr[i + begin];
+		}
+		return ret;
+	}
+	
+	public static byte[][] splitBytesData(byte[] arr, int size) {
+		byte[][] ret = new byte[(arr.length / size) + 1][size];
+		ret[ret.length - 1] = new byte[arr.length % size];
+		for (int i = 0; i < arr.length; i++) {
+			ret[i / size][i % size] = arr[i];
+		}
+		return ret;
+	}
+	
 }
