@@ -30,28 +30,9 @@ USE `tiger_chat`;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
-CREATE DEFINER=`root`@`localhost` FUNCTION `login`(realUsername varchar(256), realPass varchar(256)) RETURNS int(11)
+CREATE DEFINER=`root`@`localhost` FUNCTION `login`(realUsername varchar(36), realPass varchar(256)) RETURNS varchar(36) CHARSET latin1
 BEGIN
-RETURN IF ((SELECT COUNT(username) FROM users WHERE username=realUsername AND pass=realPass) > 0, 1, 0);
-END ;;
-DELIMITER ;
-/*!50003 SET sql_mode              = @saved_sql_mode */ ;
-/*!50003 SET character_set_client  = @saved_cs_client */ ;
-/*!50003 SET character_set_results = @saved_cs_results */ ;
-/*!50003 SET collation_connection  = @saved_col_connection */ ;
-/*!50003 DROP PROCEDURE IF EXISTS `add_message` */;
-/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
-/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
-/*!50003 SET @saved_col_connection = @@collation_connection */ ;
-/*!50003 SET character_set_client  = utf8 */ ;
-/*!50003 SET character_set_results = utf8 */ ;
-/*!50003 SET collation_connection  = utf8_general_ci */ ;
-/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
-/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
-DELIMITER ;;
-CREATE DEFINER=`root`@`localhost` PROCEDURE `add_message`(IN conv_id INTEGER, IN user varchar(256), IN msg LONGBLOB, IN typ CHAR)
-BEGIN
-	INSERT INTO messages (conversation_id, username, message, type) VALUES (conv_id, user, msg, typ);
+RETURN IF ((SELECT COUNT(user_name) FROM USER WHERE user_name=realUsername AND hashed_auth=password(realPass)) > 0, (SELECT user_id FROM USER WHERE user_name=realUsername AND hashed_auth=realPass LIMIT 1), 'null');
 END ;;
 DELIMITER ;
 /*!50003 SET sql_mode              = @saved_sql_mode */ ;
@@ -68,34 +49,20 @@ DELIMITER ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
-CREATE DEFINER=`root`@`localhost` PROCEDURE `create_conversation`(IN realUsernames MEDIUMTEXT, OUT conv_id INTEGER)
+CREATE DEFINER=`root`@`localhost` PROCEDURE `create_conversation`(user_list LONGTEXT, created_by VARCHAR(36))
 BEGIN
-	DECLARE newNum INTEGER;
-    DECLARE userNum INTEGER;
-    DECLARE userIndex INTEGER;
-    SET conv_id = -1;
-    SET newNum = (SELECT MAX(conversation_id) FROM conversations);
-    SET newNum = IFNULL(newNum + 1, 0);
-    SET userNum = CHAR_LENGTH(realUsernames) - CHAR_LENGTH(REPLACE(realUsernames, ',', '')) + 1;
-    SET userIndex = 1;
-    IF userNum <> 1 THEN
-		SET conv_id = newNum;
-		addUsers: LOOP
-			INSERT INTO conversations (conversation_id, username) VALUES (newNum, SUBSTRING_INDEX(SUBSTRING_INDEX(realUsernames, ',', userIndex), ',', -1));
-            SET userIndex = userIndex + 1;
-            IF userIndex <= userNum THEN
-				ITERATE addUsers;
-			END IF;
-            LEAVE addUsers;
-        END LOOP addUsers;
-    END IF;
+    DECLARE conv_id VARCHAR(36);
+	INSERT INTO CONVERSATION (user_id_list, created_by_user_id) VALUES(user_list, '-1');
+    SET conv_id=(SELECT conversation_id FROM CONVERSATION WHERE created_by_user_id='-1' LIMIT 1);
+    UPDATE CONVERSATION SET created_by_user_id=created_by WHERE created_by_user_id='-1';
+    SELECT conv_id AS conv_id;
 END ;;
 DELIMITER ;
 /*!50003 SET sql_mode              = @saved_sql_mode */ ;
 /*!50003 SET character_set_client  = @saved_cs_client */ ;
 /*!50003 SET character_set_results = @saved_cs_results */ ;
 /*!50003 SET collation_connection  = @saved_col_connection */ ;
-/*!50003 DROP PROCEDURE IF EXISTS `get_new_messages` */;
+/*!50003 DROP PROCEDURE IF EXISTS `request_message` */;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
 /*!50003 SET @saved_cs_results     = @@character_set_results */ ;
 /*!50003 SET @saved_col_connection = @@collation_connection */ ;
@@ -105,11 +72,30 @@ DELIMITER ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
-CREATE DEFINER=`root`@`localhost` PROCEDURE `get_new_messages`(conv_id INTEGER, lt varchar(30))
+CREATE DEFINER=`root`@`localhost` PROCEDURE `request_message`(conv_id VARCHAR(36), block_number INT)
 BEGIN
-	DECLARE last_time TIMESTAMP(6);
-    SET last_time = TIMESTAMP(lt);
-	SELECT * FROM messages WHERE conversation_id=conv_id AND last_time < created_on;
+	DECLARE starter INT;
+    SET starter = 50 * block_number;
+	SELECT * FROM CONVERSATION_HISTORY WHERE conversation_id=conv_id ORDER BY created LIMIT starter, 50;
+END ;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
+/*!50003 DROP PROCEDURE IF EXISTS `request_user_conversations` */;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8 */ ;
+/*!50003 SET character_set_results = utf8 */ ;
+/*!50003 SET collation_connection  = utf8_general_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
+DELIMITER ;;
+CREATE DEFINER=`root`@`localhost` PROCEDURE `request_user_conversations`(user_id VARCHAR(36))
+BEGIN
+	SELECT conversation_id FROM CONVERSATION WHERE user_id_list LIKE CONCAT('%', user_id, '%');
 END ;;
 DELIMITER ;
 /*!50003 SET sql_mode              = @saved_sql_mode */ ;
@@ -126,4 +112,4 @@ DELIMITER ;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2018-11-26  4:03:55
+-- Dump completed on 2018-12-02  4:30:23
