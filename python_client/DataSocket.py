@@ -2,7 +2,7 @@ from PyQt5.Core import QThread
 from PyQt5.QtNetwork import QUdpSocket, QHostAddress
 from datetime import datetime as dt
 from collections import deque
-import RDPDatagram as RDP
+import RDP_datagram as RDP
 
 MAX_PENDING_DATAGRAMS = 210
 MAX_DATAGRAM_SIZE = 504-16
