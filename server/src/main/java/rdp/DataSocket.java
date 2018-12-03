@@ -82,6 +82,7 @@ public class DataSocket extends Thread {
 		this.pendingSentDatagrams = new LinkedList<>();
 		this.datagramSendList = new LinkedList<>();
 		this.receivedSequences = new LinkedList<>();
+		this.fragmentedData = new HashMap<>();
 		this.sendWindow = 1;
 		this.timeoutTime = 1000;
 		this.reader = reader;
@@ -111,6 +112,7 @@ public class DataSocket extends Thread {
 						if (rdp.getAcknowledgement() > 0) processAck(rdp.getAcknowledgement(), rdp.getSequence());
 						if (rdp.getData().length > 0) {
 							TTPPacket ttp = rdp.getTTPPacket();
+							System.out.println(ttp);
 							if (ttp.getFlag() == FlagType.CON) this.receivedSequences.add(-rdp.getSequence());
 							else this.receivedSequences.add(rdp.getSequence());
 							if (rdp.getHead() > 0) deFragmentPacket(rdp);
@@ -198,8 +200,13 @@ public class DataSocket extends Thread {
 			this.socket.receive(d);
 			this.sendAddress = d.getAddress();
 			this.sendPort = d.getPort();
-			return new RDPDatagram(d.getData());
+			RDPDatagram r = new RDPDatagram(d.getData());
+			System.out.println(r);
+			return r;
 		} catch (SocketTimeoutException e) {
+			return null;
+		} catch (IOException e) {
+			e.printStackTrace();
 			return null;
 		}
 	}
@@ -212,6 +219,9 @@ public class DataSocket extends Thread {
 		this.timeoutWatchIndex = 0;
 		while (!this.datagramSendList.isEmpty() && numSent < this.sendWindow) {
 			RDPDatagram r = this.datagramSendList.poll();
+			System.out.println(r);
+			System.out.println(this.sendAddress);
+			System.out.println(this.sendPort);
 			send(r);
 			this.numTimeouts = 0;
 			this.pendingSentDatagrams.add(new PendingDatagram(r, 0, d.getTime()));

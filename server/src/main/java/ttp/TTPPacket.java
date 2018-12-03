@@ -1,6 +1,7 @@
 package ttp;
 
 import java.io.UnsupportedEncodingException;
+import java.util.Arrays;
 import java.util.HashMap;
 
 import util.Utility;
@@ -160,6 +161,17 @@ public class TTPPacket {
 			ret += s[i];
 		}
 		return ret;
+	}
+
+	@Override
+	public String toString() {
+		StringBuilder builder = new StringBuilder();
+		builder.append("TTPPacket [flag=");
+		builder.append(flag);
+		builder.append(", data=");
+		builder.append(Arrays.toString(data));
+		builder.append("]");
+		return builder.toString();
 	}
 	
 }

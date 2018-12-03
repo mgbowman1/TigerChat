@@ -8,6 +8,7 @@ import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Types;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -43,6 +44,7 @@ public abstract class Processor {
 		sendFile = conn.prepareCall("INSERT INTO CONVERSATION_HISTORY (conversation_id, conversation_data, type, created_by_user_id) VALUES (?, ?, 'f', ?)");
 		getMessageBlock = conn.prepareCall("{call request_message(?, ?)}");
 		login = conn.prepareCall("{? = call login(?, ?)}");
+		login.registerOutParameter(1, Types.VARCHAR);
 		createConversation = conn.prepareCall("{call create_conversation(?, ?)}");
 		getUserConversations = conn.prepareCall("{call request_user_conversations(?)}");
 	}

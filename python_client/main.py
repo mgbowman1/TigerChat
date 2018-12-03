@@ -7,7 +7,7 @@ from PyQt5.QtWidgets import (QApplication, QLineEdit, QMainWindow, QPushButton,
                              QInputDialog, QFileDialog, QAction)
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QIcon
-from message_thread import MessageWorker
+from message_worker import MessageWorker
 
 
 class chatHistory(QTextEdit):
@@ -55,7 +55,6 @@ class chatWindow(QMainWindow):
         self.conversation_history = chatHistory(self)
         self.conversation_history.setReadOnly(True)
         self.text_box = QLineEdit(self)
-        self.text_box.setText("Replace me with textEdit.")
         self.text_box.resize(260, 40)
         self.text_box.setMinimumWidth(100)
         self.text_box.setMaxLength(2000)
@@ -103,9 +102,9 @@ class chatWindow(QMainWindow):
         # start all
         self.text_box.setFocus()
         self.show()
-        self.login_window()
-        # self.m_thread = MessageWorker()
-        # self.m_thread.start()
+        # self.login_window()
+        self.m_thread = MessageWorker()
+        self.m_thread.start()
         # self.m_thread.conn_est.connect(self.connection_established)
 
     def send_clicked(self):

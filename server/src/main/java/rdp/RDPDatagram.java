@@ -10,6 +10,7 @@ public class RDPDatagram {
 	private int acknowledgement;
 	private int head;
 	private int tail;
+	private int length;
 	private byte[] data;
 	
 	// Datagram sequence number tracker
@@ -20,7 +21,8 @@ public class RDPDatagram {
 		this.acknowledgement = Utility.byteToInt(bytes, 4);
 		this.head = Utility.byteToInt(bytes, 8);
 		this.tail = Utility.byteToInt(bytes, 12);
-		this.data = Utility.splitBytes(bytes, 16);
+		this.length = Utility.byteToInt(bytes, 16);
+		this.data = Utility.splitBytes(bytes, 20, 20 + this.length);
 	}
 	
 	public RDPDatagram(int acknowledgement, int head, int tail, TTPPacket packet) {
@@ -30,6 +32,7 @@ public class RDPDatagram {
 		this.tail = tail;
 		if (packet == null) this.data = new byte[0];
 		else this.data = packet.getBytes();
+		this.length = this.data.length;
 	}
 	
 	public RDPDatagram(int acknowledgement, int fragDistance, TTPPacket packet) {
@@ -38,6 +41,7 @@ public class RDPDatagram {
 		this.head = this.sequence;
 		this.tail = this.head + fragDistance;
 		this.data = packet.getBytes();
+		this.length = this.data.length;
 	}
 	
 	public int getSequence() {
@@ -66,6 +70,7 @@ public class RDPDatagram {
 			Utility.intToByte(this.acknowledgement),
 			Utility.intToByte(this.head),
 			Utility.intToByte(this.tail),
+			Utility.intToByte(this.length),
 			this.data});
 	}
 	
@@ -83,6 +88,24 @@ public class RDPDatagram {
 	
 	public static void resetSequenceIfLarger(int size) {
 		if (currentSequenceNumber + size > Integer.MAX_VALUE) currentSequenceNumber = 1;
+	}
+
+	@Override
+	public String toString() {
+		StringBuilder builder = new StringBuilder();
+		builder.append("RDPDatagram [sequence=");
+		builder.append(sequence);
+		builder.append(", acknowledgement=");
+		builder.append(acknowledgement);
+		builder.append(", head=");
+		builder.append(head);
+		builder.append(", tail=");
+		builder.append(tail);
+		builder.append(", length=");
+		builder.append(length);
+		builder.append(", data=");
+		builder.append(getTTPPacket().toString());
+		return builder.toString();
 	}
 
 }

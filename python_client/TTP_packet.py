@@ -24,13 +24,14 @@ class TTP_packet():
             global FLAG_TYPE
             s = FLAG_TYPE[self.flag]
             if s == "MSG":
-                self.data = sender_id.encode("utf-8")
-                + self.DELIM
-                + conversation_id.encode("utf-8")
-                + self.DELIM
-                + timestamp.encode("utf-8")
-                + self.DELIM
-                + message.enncode("utf-8")
+                self.data = b"".join(
+                                    sender_id.encode("utf-8"),
+                                    self.DELIM,
+                                    conversation_id.encode("utf-8"),
+                                    self.DELIM,
+                                    timestamp.encode("utf-8"),
+                                    self.DELIM,
+                                    message.enncode("utf-8")),
             elif s == "FIL":
                 self.data = conversation_id.encode("utf-8")
                 + self.DELIM
@@ -54,9 +55,11 @@ class TTP_packet():
                 + self.DELIM
                 + utility.int_to_byte(received_percentage)
             elif s == "CON":
-                self.data = username.encode("utf-8")
-                + self.DELIM
-                + password.encode("utf-8")
+                self.data = b"".join(
+                                    [
+                                        username.encode("utf-8"),
+                                        self.DELIM,
+                                        password.encode("utf-8")])
             elif s == "CCV":
                 self.data = username_arr[0]
                 for i in range(1,len(username_arr)):

@@ -31,7 +31,8 @@ class RDP_Datagram():
             self.acknowledgement = utility.byte_to_int(bytes_arr, 4)
             self.head = utility.byte_to_int(bytes_arr, 8)
             self.tail = utility.byte_to_int(bytes_arr, 12)
-            self.data = utility.byte_to_int(bytes_arr, 16)
+            self.length = utility.byte_to_int(bytes_arr, 16)
+            self.data = bytes_arr[20:20 + self.length]
         else:
             self.sequence = get_next_sequence_number()
             self.acknowledgement = acknowledgement
@@ -45,13 +46,16 @@ class RDP_Datagram():
             else:
                 self.head = self.sequence
                 self.tail = self.head + frag_distance
+            self.length = len(self.data)
 
     def get_bytes(self):
-        return utility.int_to_byte(self.sequence)
-        + utility.int_to_byte(self.acknowledgement)
-        + utility.int_to_byte(self.head)
-        + utility.int_to_byte(self.tail)
-        + self.data
+        return b"".join([
+                        utility.int_to_byte(self.sequence),
+                        utility.int_to_byte(self.acknowledgement),
+                        utility.int_to_byte(self.head),
+                        utility.int_to_byte(self.tail),
+                        utility.int_to_byte(self.length),
+                        self.data])
 
     def get_TTP_packet(self):
         return TTP_packet(self.data)
