@@ -95,9 +95,9 @@ public class TTPPacket {
 	}
 	
 	// Convert most any packet into a hashmap
-	public HashMap<String, Object> getData() {
-		HashMap<String, Object> o = new HashMap<>();
-		o.put("flag", this.flag);
+	public HashMap<String, String> getData() {
+		HashMap<String, String> o = new HashMap<>();
+		o.put("flag", Integer.toString(this.flag.getValue()));
 		String[] s = new String[0];
 		try {
 			s = new String(this.data, "UTF-8").split("[|]");
@@ -120,6 +120,10 @@ public class TTPPacket {
 			o.put("size", s[3]);
 			o.put("fileName", rebuildString(s, 4));
 			break;
+		case FIL:
+			o.put("conversationID", s[0]);
+			o.put("file", s[1]);
+			break;
 		case RQM: // Note this is only for getting client RQM
 			o.put("conversationID", s[0]);
 			o.put("messageBlockNumber", s[1]);
@@ -129,9 +133,11 @@ public class TTPPacket {
 			o.put("password", s[1]);
 			break;
 		case CCV: // Note that CLS was skipped and this is only for getting client CCV
-			for (int i = 0; i < s.length; i++) {
-				o.put("username" + Integer.toString(i), s[i]);
+			String users = s[0];
+			for (int i = 1; i < s.length; i++) {
+				users += "," + s[i];
 			}
+			o.put("usernames", users);
 			break;
 		default:
 			System.out.println("Bad attempt to get data");
@@ -142,6 +148,10 @@ public class TTPPacket {
 	
 	public byte[] getBytes() {
 		return Utility.mergeBytes(new byte[] {(byte) this.flag.getValue()}, this.data);
+	}
+	
+	public FlagType getFlag() {
+		return this.flag;
 	}
 	
 	private String rebuildString(String[] s, int offset) {

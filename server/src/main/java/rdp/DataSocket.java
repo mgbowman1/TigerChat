@@ -13,6 +13,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Queue;
 
+import ttp.FlagType;
 import ttp.Processor;
 import ttp.Server;
 import ttp.TTPPacket;
@@ -107,12 +108,14 @@ public class DataSocket extends Thread {
 					RDPDatagram rdp = receive();
 					if (rdp == null) break;
 					else {
-						if (rdp.getAcknowledgement() > 0) processAck(rdp.getAcknowledgement());
+						if (rdp.getAcknowledgement() > 0) processAck(rdp.getAcknowledgement(), rdp.getSequence());
 						if (rdp.getData().length > 0) {
-							this.receivedSequences.add(rdp.getSequence());
+							TTPPacket ttp = rdp.getTTPPacket();
+							if (ttp.getFlag() == FlagType.CON) this.receivedSequences.add(-rdp.getSequence());
+							else this.receivedSequences.add(rdp.getSequence());
 							if (rdp.getHead() > 0) deFragmentPacket(rdp);
 							else {
-								this.reader.receive(rdp.getTTPPacket());
+								this.reader.receive(ttp);
 								if (this.reader instanceof Server) break;
 							}
 						}
@@ -148,13 +151,14 @@ public class DataSocket extends Thread {
 	}
 	
 	// Proceses an ACK for the send list
-	private void processAck(int ackNumber) {
+	private void processAck(int ackNumber, int seqNumber) {
 		Iterator<PendingDatagram> i = this.pendingSentDatagrams.iterator();
 		int index = 0;
 		while (i.hasNext()) {
 			PendingDatagram pd = i.next();
 			if (pd.datagram.getSequence() == ackNumber) {
 				i.remove();
+				if (pd.datagram.getTTPPacket().getFlag() == FlagType.CON) this.receivedSequences.add(seqNumber);
 				if (index == this.timeoutDatagramIndex) this.timeoutDatagramIndex++;
 				if (this.timeoutDatagramIndex >= this.pendingSentDatagrams.size()) this.timeoutDatagramIndex = 0;
 				if (index == this.timeoutWatchIndex) calculateTimeout(new Date().getTime() - pd.timeSent);
@@ -214,9 +218,11 @@ public class DataSocket extends Thread {
 			numSent++;
 		}
 		while (numSent < this.sendWindow && !this.receivedSequences.isEmpty()) {
-			RDPDatagram r = new RDPDatagram(this.receivedSequences.poll(), 0, 0, null);
+			int seq = this.receivedSequences.poll();
+			int realSeq = Math.abs(seq);
+			RDPDatagram r = new RDPDatagram(realSeq, 0, 0, null);
 			send(r);
-			this.pendingSentDatagrams.add(new PendingDatagram(r, 0, d.getTime()));
+			if (seq < 0) this.pendingSentDatagrams.add(new PendingDatagram(r, 0, d.getTime()));
 			numSent++;
 		}
 	}
@@ -237,6 +243,7 @@ public class DataSocket extends Thread {
 				TTPPacket t = new TTPPacket(data[i]);
 				Integer ack = this.receivedSequences.poll();
 				if (ack == null) ack = 0;
+				else ack = Math.abs(ack.intValue());
 				RDPDatagram r = new RDPDatagram(ack, data.length, t);
 				this.datagramSendList.add(r);
 			}

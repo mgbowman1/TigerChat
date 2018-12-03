@@ -25,11 +25,14 @@ public class Server extends Processor {
 	// The datasocket for the server
 	DataSocket serverSocket;
 	
-	public Server(ExecutorService es, DataSocket serverSocket) throws SQLException {
+	public Server(ExecutorService es) throws SQLException {
 		super();
 		this.es = es;
-		this.serverSocket = serverSocket;
 		sendPackets = new LinkedList<>();
+	}
+	
+	public void setSocket(DataSocket serverSocket) {
+		this.serverSocket = serverSocket;
 	}
 	
 	public static void addPacket(String user, TTPPacket ttp) {
@@ -49,10 +52,10 @@ public class Server extends Processor {
 
 	@Override
 	public void receive(TTPPacket packet) {
-		HashMap<String, Object> values = packet.getData();
+		HashMap<String, String> values = packet.getData();
 		if (values.containsKey("username")) {
 			try {
-				String id = super.handleLogin((String) values.get("username"), (String) values.get("password"));
+				String id = super.handleLogin(values.get("username"), values.get("password"));
 				if (!id.equals("")) {
 					try {
 						DataSocket ds = new DataSocket(new SocketConnection(Server.currentPort++));
