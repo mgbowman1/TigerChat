@@ -75,14 +75,14 @@ public class RDPDatagram {
 	
 	private static int getNextSequenceNumber() {
 		if (currentSequenceNumber == Integer.MAX_VALUE) {
-			currentSequenceNumber = 0;
+			currentSequenceNumber = 1;
 			return Integer.MAX_VALUE;
 		}
 		return currentSequenceNumber++;
 	}
 	
 	public static void resetSequenceIfLarger(int size) {
-		if (currentSequenceNumber + size > Integer.MAX_VALUE) currentSequenceNumber = 0;
+		if (currentSequenceNumber + size > Integer.MAX_VALUE) currentSequenceNumber = 1;
 	}
 
 }
