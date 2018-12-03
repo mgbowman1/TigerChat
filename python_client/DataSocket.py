@@ -3,6 +3,8 @@ from PyQt5.QtNetwork import QUdpSocket, QHostAddress
 from datetime import datetime as dt
 from collections import deque
 import RDP_datagram as RDP
+from TTP_packet import TTP_packet
+import utility
 
 MAX_PENDING_DATAGRAMS = 210
 MAX_DATAGRAM_SIZE = 504-16
@@ -17,7 +19,7 @@ class DataSocket(QThread):
     _estimateRTT = 0
     _devRTT = 0
 
-    def __init__(self):
+    def __init__(self, reader):
         QThread.__init__(self)
         self._ssthresh = MAX_PENDING_DATAGRAMS / 2
         self._pending_sent_datagrams = deque([])
@@ -30,12 +32,11 @@ class DataSocket(QThread):
         self.numtimeouts = 0
         self.timeout_datagram_index = 0
         self.socket = QUdpSocket()
-        self.reader = Processor()
+        self.reader = reader
 
     def run(self):
         while (self._running):
-            self.pending_index = self._pending_sent_datagrams.index(self.timeout_datagram_index)
-            self.pending_gram = self._pending_sent_datagrams[self.pending_index]
+            pending_gram = self._pending_sent_datagrams[self.timeout_datagram_index]
             if (len(self._pending_sent_datagrams) == 0):
                 try:
                     self._send_protocol()
@@ -47,35 +48,33 @@ class DataSocket(QThread):
                         self._send_window = MAX_PENDING_DATAGRAMS
                 except Exception as e:
                     self.timeout()
-            elif (round(dt.now().microsecond / 1000) - self.pending_gram.time_sent >= self.timeout_time):
+            elif (round(dt.now().microsecond / 1000) - pending_gram.time_sent >= self.timeout_time):
                 self.timeout()
             while (self._running):
                 try:
-                    self.rdp = self.receive()
-                    if (self.rdp is None):
+                    rdp = self.receive()
+                    if (rdp is None):
                         break
                     else:
-                        if (self.rdp.acknowledgement > 0):
-                            self.process_ack(self.rdp.acknowledgement)
-                        if (len(self.rdp.data > 0)):
-                            self._received_sequences.append(self.rdp.sequence)
-                            if (self.rdp.head > 0):
-                                self.defragment_packet(self.rdp)
+                        if (rdp.acknowledgement > 0):
+                            self.process_ack(rdp.acknowledgement)
+                        if (len(rdp.data > 0)):
+                            self._received_sequences.append(rdp.sequence)
+                            if (rdp.head > 0):
+                                self.defragment_packet(rdp)
                             else:
-                                self.reader.receive(self.rdp.get_TTPPacket())
-                                if (isinstance(self.reader, Client)):
-                                    break
+                                self.reader.receive(rdp.get_TTPPacket())
                 except Exception as e:
                     self.timeout()
 
     def defragment_packet(self, rdp):
         if (rdp.head in self._fragmented_data):
-            self._fragmented_data.get(rdp.head).add_datagram(rdp)
-            if (self._fragmented_data.get(rdp.head).num_datagrams_needed == 0):
-                self.reader.receive(self._fragmented_data.get(rdp.head).get_TTPPacket())
+            self._fragmented_data[rdp.head].add_datagram(rdp)
+            if (self._fragmented_data[rdp.head].num_datagrams_needed == 0):
+                self.reader.receive(self._fragmented_data[rdp.head].get_TTPPacket())
         else:
-            self._fragmented_data[rdp.head, FragmentedDatagram(rdp.head, rdp.tail)]
-            self._fragmented_data.get(rdp.head).add_datagram(rdp)
+            self._fragmented_data[rdp.head] = FragmentedDatagram(rdp.head, rdp.tail)
+            self._fragmented_data[rdp.head].add_datagram(rdp)
 
     def timeout(self):
         self._send_window = 1
@@ -83,95 +82,94 @@ class DataSocket(QThread):
         self._ssthresh = int(self._ssthresh)
         self.numtimeouts += 1
         if (self.numtimeouts == 3):
-            self.check = self.reader.reconnect()
-            if (self.check == 1):
+            check = self.reader.reconnect()
+            if (check == 1):
                 self.close()
-            elif (self.check == -1):
+            elif (check == -1):
                 self.reset()
 
     def process_ack(self, ack_number):
-        self.index = 0
+        index = 0
         for pending_gram in self._pending_sent_datagrams:
             if (pending_gram.datagram.sequence == ack_number):
                 self._pending_sent_datagrams.remove(pending_gram)
-                if (self.index == self.timeout_datagram_index):
+                if (index == self.timeout_datagram_index):
                     self.timeout_datagram_index += 1
                 if (self.timeout_datagram_index >= len(self._pending_sent_datagrams)):
                     self.timeout_datagram_index = 0
-                if (self.index == self.timeout_watch_index):
+                if (index == self.timeout_watch_index):
                     self.calculate_timeout(round(dt.now().microsecond / 1000) - pending_gram.time_sent)
-                self.index = 0
+                index = 0
                 for pending_gram in self._pending_sent_datagrams:
                     if(pending_gram.datagram.sequence < ack_number):
                         pending_gram.dup_ack += 1
                         if (pending_gram.dup_ack == 3):
                             self.resend(pending_gram)
-                            if (self.index == self.timeout_datagram_index):
+                            if (index == self.timeout_datagram_index):
                                 self.timeout_datagram_index += 1
                             if (self.timeout_datagram_index == len(self._pending_sent_datagrams)):
                                 self.timeout_datagram_index = 0
-                            if (self.index == self.timeout_watch_index):
+                            if (index == self.timeout_watch_index):
                                 self.timeout_watch_index += 1
-                        self.index += 1
+                        index += 1
                     else:
                         break
                 break
-            self.index += 1
+            index += 1
 
     def calculate_timeout(self, sample):
-        global ALPHA, BETA
-        self._estimateRTT = (1 - ALPHA) * self._estimateRTT + ALPHA * sample
-        self._devRTT = (1 - BETA) * self._devRTT + BETA * abs(sample - self._estimateRTT)
+        self._estimateRTT = (1 - self._alpha) * self._estimateRTT + self._alpha * sample
+        self._devRTT = (1 - self._beta) * self._devRTT + self._beta * abs(sample - self._estimateRTT)
         self.timeout_time = self._estimateRTT + 4 * self._devRTT
 
     def receive(self):
-        self.buffer = bytearray(512)
-        try:
-            self.socket.waitForReadyRead()
-            self.datagram_size = self.socket.pendingDatagramSize()
-            self.d = self.socket.readDatagram(self.datagram_size)
-            return RDP.RDPDatagram(self.d[0])
-        except Exception as e:
+        buffer = bytearray(512)
+        if not self.socket.hasPendingDatagrams():
             return None
+        else:
+            self.socket.readDatagram(buffer, 512)
+            return RDP.RDP_datagram(buffer)
 
     def _send_protocol(self):  # send the current window
-        self.d = round(dt.now().microsecond / 1000)
-        self.numsent = 0
+        numsent = 0
         self.timeout_datagram_index = 0
         self.timeout_watch_index = 0
 
-        while (len(self._datagram_send_list) > 0 and self.numsent < self._send_window):
-            self.r = self._datagram_send_list[0]
-            self.send(self.r)
+        while (len(self._datagram_send_list) > 0 and numsent < self._send_window):
+            r = self._datagram_send_list.popleft()
+            self.send(r)
             self.numtimeouts = 0
-            self._pending_sent_datagrams.append(PendingDatagram(self.r, 0, self.d))
-            self.numsent += 1
-        while (self.numsent < self._send_window and len(self._received_sequences) > 0):
-            self.r = RDP.RDPDatagram(self._received_sequences[0], 0, 0, None)
-            self.send(self.r)
-            self._pending_sent_datagrams.append(PendingDatagram(self.r, 0, self.d))
+            self._pending_sent_datagrams.append(PendingDatagram(r, 0, round(dt.now().microsecond / 1000)))
+            numsent += 1
+        while (numsent < self._send_window and len(self._received_sequences) > 0):
+            seq = self._received_sequences.popleft()
+            real_seq = abs(seq)
+            r = RDP.RDP_datagram(acknowledgement=real_seq)
+            self.send(r)
+            if seq < 0:
+                self._pending_sent_datagrams.append(PendingDatagram(r, 0, round(dt.now().microsecond / 1000)))
 
     def send(self, datagram):  # send a datagram
-        self.bites = datagram.get_bytes()
-        self.socket.writeDatagram(self.bites, HOSTADDRESS, SERVERPORT)
+        bites = datagram.get_bytes()
+        self.socket.writeDatagram(bites, HOSTADDRESS, SERVERPORT)
 
     def add_send(self, ttp):
-        self.bites = ttp.get_bytes()
-        if (len(self.bites) > MAX_DATAGRAM_SIZE):
-            self.data = Utility.split_bytes_data(self.bites, MAX_DATAGRAM_SIZE - 1)
-            RDP.reset_sequence_if_larger(len(self.data))
-            for i in range(len(self.data)):
-                self.t = TTPPacket(self.data[i])
-                self.ack = self._received_sequences[0]
-                if (self.ack == None):
-                    self.ack = 0
-                self.r = RDP.RDPDatagram(self.ack, len(self.data), self.t)
+        bites = ttp.get_bytes()
+        if (len(bites) > MAX_DATAGRAM_SIZE):
+            data = utility.split_bytes_data(bites, MAX_DATAGRAM_SIZE - 1)
+            RDP.reset_sequence_if_larger(len(data))
+            for i in range(len(data)):
+                t = TTP_packet(data[i])
+                ack = 0
+                if len(self._received_sequences) > 0:
+                    ack = self._received_sequences.popleft()
+                r = RDP.RDP_datagram(acknowledgement=ack, frag_distance=len(data), packet=t)
                 self._datagram_send_list.append(self.r)
         else:
-            self.ack = self._received_sequences[0]
-            if (self.ack == None):
-                self.ack = 0
-            self._datagram_send_list.append(RDP.RDPDatagram(self.ack, 0, 0, ttp))
+            ack = 0
+            if len(self._received_sequences) > 0:
+                ack = self._received_sequences.popleft()
+            self._datagram_send_list.append(RDP.RDP_datagram(acknowledgement=ack, packet=ttp))
 
     def resend(self, pd):
         pd.dup_ack = 0
@@ -221,11 +219,12 @@ class FragmentedDatagram():
 
     def add_datagram(self, rdp):
         self.num_datagrams_needed -= 1
-        self.bites = rdp.get_data()
-        if (rdp.sequence == rdp.tail and len(self.bites) < MAX_DATAGRAM_SIZE):
-            self.len = len(self.data) - (MAX_DATAGRAM_SIZE - len(self.bites))
-            self.data = self.data[:self.len]
-        self.data.extend(self.bites)
+        bites = rdp.get_data()
+        if (rdp.sequence == rdp.tail and len(bites) < MAX_DATAGRAM_SIZE):
+            data_len = len(self.data) - (MAX_DATAGRAM_SIZE - len(bites))
+            self.data = self.data[:data_len]
+        num = rdp.sequence - rdp.head
+        self.data[num:num + len(bites)] = bites
 
     def get_TTPPacket(self):
-        return TTPPacket(self.data)
+        return TTP_packet(self.data)

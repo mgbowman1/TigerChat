@@ -24,7 +24,7 @@ def reset_sequence_if_larger(size):
         current_sequence_number = 1
 
 
-class RDPDatagram():
+class RDP_Datagram():
     def __init__(self, bytes_arr=[], acknowledgement=0, head=0, tail=0, frag_distance=None, packet=None):
         if len(bytes_arr) > 0:
             self.sequence = utility.byte_to_int(bytes_arr, 0)
