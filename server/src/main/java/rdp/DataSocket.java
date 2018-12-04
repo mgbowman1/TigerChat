@@ -112,7 +112,6 @@ public class DataSocket extends Thread {
 						if (rdp.getAcknowledgement() > 0) processAck(rdp.getAcknowledgement(), rdp.getSequence());
 						if (rdp.getData().length > 0) {
 							TTPPacket ttp = rdp.getTTPPacket();
-							System.out.println(ttp);
 							if (ttp.getFlag() == FlagType.CON) this.receivedSequences.add(-rdp.getSequence());
 							else this.receivedSequences.add(rdp.getSequence());
 							if (rdp.getHead() > 0) deFragmentPacket(rdp);
@@ -201,6 +200,7 @@ public class DataSocket extends Thread {
 			this.sendAddress = d.getAddress();
 			this.sendPort = d.getPort();
 			RDPDatagram r = new RDPDatagram(d.getData());
+			System.out.println(this.reader.getPort());
 			System.out.println(r);
 			return r;
 		} catch (SocketTimeoutException e) {
@@ -219,9 +219,6 @@ public class DataSocket extends Thread {
 		this.timeoutWatchIndex = 0;
 		while (!this.datagramSendList.isEmpty() && numSent < this.sendWindow) {
 			RDPDatagram r = this.datagramSendList.poll();
-			System.out.println(r);
-			System.out.println(this.sendAddress);
-			System.out.println(this.sendPort);
 			send(r);
 			this.numTimeouts = 0;
 			this.pendingSentDatagrams.add(new PendingDatagram(r, 0, d.getTime()));
@@ -240,6 +237,8 @@ public class DataSocket extends Thread {
 	// Send a datagram
 	private void send(RDPDatagram rdp) throws IOException {
 		byte[] bytes = rdp.getBytes();
+		System.out.println("sending");
+		System.out.println(rdp);
 		this.socket.send(new DatagramPacket(bytes, bytes.length, this.sendAddress, this.sendPort));
 	}
 	
@@ -304,6 +303,10 @@ public class DataSocket extends Thread {
 			e.printStackTrace();
 		}
 		this.running = false;
+	}
+	
+	public Processor getReader() {
+		return this.reader;
 	}
 	
 	// Pending datagrams to keep track of duplicate ACKs and timestamps

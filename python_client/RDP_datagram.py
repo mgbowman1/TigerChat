@@ -1,5 +1,5 @@
 import utility
-import TTP_packet
+import TTP_packet as ttp
 
 MAX_INTEGER = 2147483647
 
@@ -58,4 +58,4 @@ class RDP_Datagram():
                         self.data])
 
     def get_TTP_packet(self):
-        return TTP_packet(self.data)
+        return ttp.TTP_packet(bytes_arr=self.data)

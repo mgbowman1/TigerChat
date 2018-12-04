@@ -4,13 +4,21 @@ import java.io.UnsupportedEncodingException;
 import java.sql.SQLException;
 import java.util.HashMap;
 
+import rdp.DataSocket;
+
 public class SocketConnection extends Processor {
 	
 	int port;
+	private DataSocket serverSocket;
 
-	public SocketConnection(int port) throws SQLException {
+	public SocketConnection(int port, String userID) throws SQLException {
 		super();
 		this.port = port;
+		this.userID = userID;
+	}
+	
+	public void setServerSocket(DataSocket serverSocket) {
+		this.serverSocket = serverSocket;
 	}
 
 	@Override
@@ -31,13 +39,13 @@ public class SocketConnection extends Processor {
 				super.handleSendFile(values.get("conversationID"), values.get("file").getBytes("UTF-8"));
 				break;
 			case RQM:
-				super.handleGetMessageBlock(values.get("conversationID"), Integer.parseInt(values.get("messageBlockNumber")));
+				this.serverSocket.addSend(new TTPPacket(super.handleGetMessageBlock(values.get("conversationID"), Integer.parseInt(values.get("messageBlockNumber")))));
 				break;
 			case CLS:
 				close();
 				break;
 			case CCV:
-				super.handleCreateConversation(values.get("usernames"));
+				this.serverSocket.addSend(new TTPPacket(super.handleCreateConversation(values.get("usernames"))));
 				break;
 			default:
 				System.out.println("Bad packet");

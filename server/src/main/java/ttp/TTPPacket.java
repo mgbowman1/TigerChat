@@ -81,6 +81,11 @@ public class TTPPacket {
 		this.data = Utility.intToByte(port);
 	}
 	
+	public TTPPacket(String id, boolean b) throws UnsupportedEncodingException {
+		this.flag = FlagType.CON;
+		this.data = id.getBytes("UTF-8");
+	}
+	
 	// Missing CLS for client
 	
 	// Missing CCV for client

@@ -1,6 +1,7 @@
 from PyQt5.QtCore import QThread, pyqtSignal
 from DataSocket import DataSocket as socket
-from TTP_packet import TTP_packet
+import TTP_packet as ttp
+import utility
 
 
 class MessageWorker(QThread):
@@ -12,11 +13,24 @@ class MessageWorker(QThread):
         QThread.__init__(self)
 
     def connect(self):
-        ttp = TTP_packet(flag=5, username='test', password='test')
-        self.socket.add_send(ttp)
+        syn = ttp.TTP_packet(flag=5, username='test', password='test')
+        self.loggedin = False
+        self.socket.add_send(syn)
 
-    def receive(self, ttp):
-        pass
+    def receive(self, ttppacket):
+        if (ttp.FLAG_TYPE[ttppacket.flag] == 'CON' and not self.loggedin):
+            self.identification = ttppacket.data.decode()
+            reply = ttp.TTP_packet(flag=1, message=self.identification)
+            self.socket.add_send(reply)
+            self.loggedin = True
+        elif (ttp.FLAG_TYPE[ttppacket.flag] == 'CON' and self.loggedin):
+            port = utility.byte_to_int(ttppacket.data, 0)
+            self.socket.socket.setPeerPort(port)
+            self.socket.serverport = port
+
+            convo = ttp.TTP_packet(flag=7, username_arr=['3bb2e85e-f75c-11e8-b05c-2c600c8aa83e'])
+            self.socket.add_send(convo)
+        print(ttppacket.data.decode())
 
     def run(self):
         self.socket = socket(self)

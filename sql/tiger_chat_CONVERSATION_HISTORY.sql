@@ -1,10 +1,10 @@
 CREATE DATABASE  IF NOT EXISTS `tiger_chat` /*!40100 DEFAULT CHARACTER SET latin1 */;
 USE `tiger_chat`;
--- MySQL dump 10.13  Distrib 5.7.24, for Linux (x86_64)
+-- MySQL dump 10.13  Distrib 5.7.17, for Win64 (x86_64)
 --
--- Host: 127.0.0.1    Database: tiger_chat
+-- Host: localhost    Database: tiger_chat
 -- ------------------------------------------------------
--- Server version	5.7.24-0ubuntu0.16.04.1
+-- Server version	5.7.17-log
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
@@ -18,13 +18,13 @@ USE `tiger_chat`;
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
 --
--- Table structure for table `CONVERSATION_HISTORY`
+-- Table structure for table `conversation_history`
 --
 
-DROP TABLE IF EXISTS `CONVERSATION_HISTORY`;
+DROP TABLE IF EXISTS `conversation_history`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `CONVERSATION_HISTORY` (
+CREATE TABLE `conversation_history` (
   `history_id` varchar(36) NOT NULL DEFAULT 'null',
   `conversation_id` varchar(36) NOT NULL,
   `conversation_data` longblob NOT NULL,
@@ -35,6 +35,15 @@ CREATE TABLE `CONVERSATION_HISTORY` (
   UNIQUE KEY `history_id_UNIQUE` (`history_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `conversation_history`
+--
+
+LOCK TABLES `conversation_history` WRITE;
+/*!40000 ALTER TABLE `conversation_history` DISABLE KEYS */;
+/*!40000 ALTER TABLE `conversation_history` ENABLE KEYS */;
+UNLOCK TABLES;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
 /*!50003 SET @saved_cs_results     = @@character_set_results */ ;
 /*!50003 SET @saved_col_connection = @@collation_connection */ ;
@@ -65,4 +74,4 @@ DELIMITER ;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2018-12-02  4:30:23
+-- Dump completed on 2018-12-03 19:04:33

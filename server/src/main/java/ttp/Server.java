@@ -1,5 +1,6 @@
 package ttp;
 
+import java.io.UnsupportedEncodingException;
 import java.net.SocketException;
 import java.sql.SQLException;
 import java.util.HashMap;
@@ -29,6 +30,7 @@ public class Server extends Processor {
 		super();
 		this.es = es;
 		sendPackets = new LinkedList<>();
+		connections = new HashMap<>();
 	}
 	
 	public void setSocket(DataSocket serverSocket) {
@@ -58,16 +60,23 @@ public class Server extends Processor {
 				String id = super.handleLogin(values.get("username"), values.get("password"));
 				if (!id.equals("")) {
 					try {
-						DataSocket ds = new DataSocket(new SocketConnection(Server.currentPort++));
+						SocketConnection sc = new SocketConnection(Server.currentPort++, id);
+						DataSocket ds = new DataSocket(sc);
+						sc.setServerSocket(ds);
+						connections.put(id, ds);
 						es.execute(ds);
-						this.serverSocket.addSend(new TTPPacket(Server.currentPort - 1));
-					} catch (SocketException e) {
+						this.serverSocket.addSend(new TTPPacket(id, true));
+					} catch (SocketException | UnsupportedEncodingException e) {
 						e.printStackTrace();
 					}
 				}
 			} catch (SQLException e) {
 				e.printStackTrace();
 			}
+		} else {
+			String id = values.get("file");
+			int port = connections.get(id).getReader().getPort();
+			this.serverSocket.addSend(new TTPPacket(port));
 		}
 	}
 

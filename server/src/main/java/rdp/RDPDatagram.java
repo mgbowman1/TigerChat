@@ -103,8 +103,10 @@ public class RDPDatagram {
 		builder.append(tail);
 		builder.append(", length=");
 		builder.append(length);
-		builder.append(", data=");
-		builder.append(getTTPPacket().toString());
+		if (length > 0) {
+			builder.append(", data=");
+			builder.append(getTTPPacket().toString());
+		}
 		return builder.toString();
 	}
 

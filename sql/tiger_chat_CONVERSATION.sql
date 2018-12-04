@@ -1,10 +1,10 @@
 CREATE DATABASE  IF NOT EXISTS `tiger_chat` /*!40100 DEFAULT CHARACTER SET latin1 */;
 USE `tiger_chat`;
--- MySQL dump 10.13  Distrib 5.7.24, for Linux (x86_64)
+-- MySQL dump 10.13  Distrib 5.7.17, for Win64 (x86_64)
 --
--- Host: 127.0.0.1    Database: tiger_chat
+-- Host: localhost    Database: tiger_chat
 -- ------------------------------------------------------
--- Server version	5.7.24-0ubuntu0.16.04.1
+-- Server version	5.7.17-log
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
@@ -18,23 +18,31 @@ USE `tiger_chat`;
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
 --
--- Table structure for table `CONVERSATION`
+-- Table structure for table `conversation`
 --
 
-DROP TABLE IF EXISTS `CONVERSATION`;
+DROP TABLE IF EXISTS `conversation`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `CONVERSATION` (
+CREATE TABLE `conversation` (
   `conversation_id` varchar(36) NOT NULL DEFAULT 'null',
   `user_id_list` longtext NOT NULL,
   `created` timestamp(1) NOT NULL DEFAULT CURRENT_TIMESTAMP(1),
   `created_by_user_id` varchar(36) NOT NULL,
   PRIMARY KEY (`conversation_id`),
-  UNIQUE KEY `conversation_id_UNIQUE` (`conversation_id`),
-  KEY `user_id_idx` (`created_by_user_id`),
-  CONSTRAINT `user_id` FOREIGN KEY (`created_by_user_id`) REFERENCES `USER` (`user_id`)
+  UNIQUE KEY `conversation_id_UNIQUE` (`conversation_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `conversation`
+--
+
+LOCK TABLES `conversation` WRITE;
+/*!40000 ALTER TABLE `conversation` DISABLE KEYS */;
+INSERT INTO `conversation` VALUES ('044d1778-f760-11e8-b05c-2c600c8aa83e','3bb2e85e-f75c-11e8-b05c-2c600c8aa83e','2018-12-04 01:00:20.0','b8fc05d2-f739-11e8-b05c-2c600c8aa83e');
+/*!40000 ALTER TABLE `conversation` ENABLE KEYS */;
+UNLOCK TABLES;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
 /*!50003 SET @saved_cs_results     = @@character_set_results */ ;
 /*!50003 SET @saved_col_connection = @@collation_connection */ ;
@@ -65,4 +73,4 @@ DELIMITER ;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2018-12-02  4:30:23
+-- Dump completed on 2018-12-03 19:04:33

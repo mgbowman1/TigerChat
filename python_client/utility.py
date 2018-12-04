@@ -1,7 +1,7 @@
 import struct
 
 def byte_to_int(data, offset):
-	return struct.unpack("<i", data[offset:offset + 4])
+	return struct.unpack("<i", data[offset:offset + 4])[0]
 
 def int_to_byte(num):
 	return struct.pack("<i", num)

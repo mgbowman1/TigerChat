@@ -1,10 +1,10 @@
 CREATE DATABASE  IF NOT EXISTS `tiger_chat` /*!40100 DEFAULT CHARACTER SET latin1 */;
 USE `tiger_chat`;
--- MySQL dump 10.13  Distrib 5.7.24, for Linux (x86_64)
+-- MySQL dump 10.13  Distrib 5.7.17, for Win64 (x86_64)
 --
--- Host: 127.0.0.1    Database: tiger_chat
+-- Host: localhost    Database: tiger_chat
 -- ------------------------------------------------------
--- Server version	5.7.24-0ubuntu0.16.04.1
+-- Server version	5.7.17-log
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
@@ -28,11 +28,11 @@ USE `tiger_chat`;
 /*!50003 SET character_set_results = utf8 */ ;
 /*!50003 SET collation_connection  = utf8_general_ci */ ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
-/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
+/*!50003 SET sql_mode              = 'STRICT_TRANS_TABLES,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
 CREATE DEFINER=`root`@`localhost` FUNCTION `login`(realUsername varchar(36), realPass varchar(256)) RETURNS varchar(36) CHARSET latin1
 BEGIN
-RETURN IF ((SELECT COUNT(user_name) FROM USER WHERE user_name=realUsername AND hashed_auth=password(realPass)) > 0, (SELECT user_id FROM USER WHERE user_name=realUsername AND hashed_auth=realPass LIMIT 1), 'null');
+RETURN IF ((SELECT COUNT(user_name) FROM USER WHERE user_name=realUsername AND hashed_auth=password(realPass)) > 0, (SELECT user_id FROM USER WHERE user_name=realUsername AND hashed_auth=password(realPass) LIMIT 1), 'null');
 END ;;
 DELIMITER ;
 /*!50003 SET sql_mode              = @saved_sql_mode */ ;
@@ -112,4 +112,4 @@ DELIMITER ;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2018-12-02  4:30:23
+-- Dump completed on 2018-12-03 19:04:34
