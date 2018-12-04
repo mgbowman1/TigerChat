@@ -15,8 +15,6 @@ import java.util.Date;
 
 import com.mysql.cj.jdbc.MysqlDataSource;
 
-import util.Utility;
-
 public abstract class Processor {
 	protected Connection conn;
 	
@@ -90,7 +88,7 @@ public abstract class Processor {
 		return res;
 	}
 	
-	protected void handleSendFile(String conversationID, byte[] file) throws SQLException {
+	protected void handleSendFile(String conversationID, int size, String name, byte[] file) throws SQLException {
 		sendFile.setString(1, conversationID);
 		sendFile.setBlob(2, getBlob(file));
 		sendFile.setString(3, this.userID);
@@ -99,15 +97,8 @@ public abstract class Processor {
 		ArrayList<String> ids = handleGetConversationUsers(conversationID);
 		for (int i = 0; i < ids.size();i ++) {
 			if (!ids.get(i).equals(this.userID)) {
-				try {
-					int size = Utility.byteToInt(file, 0);
-					int nameSize = Utility.byteToInt(file, 4);
-					String name = new String(Utility.splitBytes(file, 8, 8 + nameSize), "UTF-8");
-					TTPPacket ttp = new TTPPacket(this.userID, conversationID, timestamp, name, size);
-					Server.addPacket(ids.get(i), ttp);
-				} catch (UnsupportedEncodingException e) {
-					e.printStackTrace();
-				}
+				TTPPacket ttp = new TTPPacket(this.userID, conversationID, timestamp, name, size);
+				Server.addPacket(ids.get(i), ttp);
 			}
 		}
 		Server.sendAllPackets();
@@ -119,14 +110,15 @@ public abstract class Processor {
 		getMessageBlock.execute();
 		TON t = new TON();
 		ResultSet r = getMessageBlock.getResultSet();
+		r.next();
 		while (!r.isAfterLast()) {
-			r.next();
-			Blob message = r.getBlob("conversationi_data");
+			Blob message = r.getBlob("conversation_data");
 			try {
 				t.addEntry(r.getString("created_by_user_id"), conversationID, r.getString("created"), new String(message.getBytes(1L, (int) message.length()), "UTF-8"));
 			} catch (UnsupportedEncodingException e) {
 				e.printStackTrace();
 			}
+			r.next();
 		}
 		return t;
 	}

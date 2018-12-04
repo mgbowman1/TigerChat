@@ -128,7 +128,9 @@ public class TTPPacket {
 			break;
 		case FIL:
 			o.put("conversationID", s[0]);
-			o.put("file", s[1]);
+			o.put("size", s[1]);
+			o.put("name", s[2]);
+			o.put("file", s[3]);
 			break;
 		case RQM: // Note this is only for getting client RQM
 			o.put("conversationID", s[0]);

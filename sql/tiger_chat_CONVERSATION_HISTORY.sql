@@ -18,13 +18,13 @@ USE `tiger_chat`;
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
 --
--- Table structure for table `conversation_history`
+-- Table structure for table `CONVERSATION_HISTORY`
 --
 
-DROP TABLE IF EXISTS `conversation_history`;
+DROP TABLE IF EXISTS `CONVERSATION_HISTORY`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `conversation_history` (
+CREATE TABLE `CONVERSATION_HISTORY` (
   `history_id` varchar(36) NOT NULL DEFAULT 'null',
   `conversation_id` varchar(36) NOT NULL,
   `conversation_data` longblob NOT NULL,
@@ -37,12 +37,12 @@ CREATE TABLE `conversation_history` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Dumping data for table `conversation_history`
+-- Dumping data for table `CONVERSATION_HISTORY`
 --
 
-LOCK TABLES `conversation_history` WRITE;
-/*!40000 ALTER TABLE `conversation_history` DISABLE KEYS */;
-/*!40000 ALTER TABLE `conversation_history` ENABLE KEYS */;
+LOCK TABLES `CONVERSATION_HISTORY` WRITE;
+/*!40000 ALTER TABLE `CONVERSATION_HISTORY` DISABLE KEYS */;
+/*!40000 ALTER TABLE `CONVERSATION_HISTORY` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
 /*!50003 SET @saved_cs_results     = @@character_set_results */ ;

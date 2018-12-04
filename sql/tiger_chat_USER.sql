@@ -18,13 +18,13 @@ USE `tiger_chat`;
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
 --
--- Table structure for table `user`
+-- Table structure for table `USER`
 --
 
-DROP TABLE IF EXISTS `user`;
+DROP TABLE IF EXISTS `USER`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `user` (
+CREATE TABLE `USER` (
   `user_id` varchar(36) NOT NULL DEFAULT 'null',
   `user_name` varchar(256) NOT NULL,
   `hashed_auth` char(41) NOT NULL,
@@ -36,13 +36,13 @@ CREATE TABLE `user` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Dumping data for table `user`
+-- Dumping data for table `USER`
 --
 
-LOCK TABLES `user` WRITE;
-/*!40000 ALTER TABLE `user` DISABLE KEYS */;
-INSERT INTO `user` VALUES ('3bb2e85e-f75c-11e8-b05c-2c600c8aa83e','tester','*945E2AF30B5AA2DC36C9B6363D9B1D52A3E4D4DC','2018-12-04 00:33:15.0'),('b8fc05d2-f739-11e8-b05c-2c600c8aa83e','test','*94BDCEBE19083CE2A1F959FD02F964C7AF4CFC29','2018-12-03 20:26:12.7');
-/*!40000 ALTER TABLE `user` ENABLE KEYS */;
+LOCK TABLES `USER` WRITE;
+/*!40000 ALTER TABLE `USER` DISABLE KEYS */;
+INSERT INTO `USER` VALUES ('3bb2e85e-f75c-11e8-b05c-2c600c8aa83e','tester','*945E2AF30B5AA2DC36C9B6363D9B1D52A3E4D4DC','2018-12-04 00:33:15.0'),('b8fc05d2-f739-11e8-b05c-2c600c8aa83e','test','*94BDCEBE19083CE2A1F959FD02F964C7AF4CFC29','2018-12-03 20:26:12.7');
+/*!40000 ALTER TABLE `USER` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
 /*!50003 SET @saved_cs_results     = @@character_set_results */ ;

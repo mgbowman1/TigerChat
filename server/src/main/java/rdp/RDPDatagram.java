@@ -59,6 +59,10 @@ public class RDPDatagram {
 	public int getTail() {
 		return tail;
 	}
+	
+	public int getLength() {
+		return this.length;
+	}
 
 	public byte[] getData() {
 		return data;

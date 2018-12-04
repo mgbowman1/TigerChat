@@ -18,13 +18,13 @@ USE `tiger_chat`;
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
 --
--- Table structure for table `conversation`
+-- Table structure for table `CONVERSATION`
 --
 
-DROP TABLE IF EXISTS `conversation`;
+DROP TABLE IF EXISTS `CONVERSATION`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `conversation` (
+CREATE TABLE `CONVERSATION` (
   `conversation_id` varchar(36) NOT NULL DEFAULT 'null',
   `user_id_list` longtext NOT NULL,
   `created` timestamp(1) NOT NULL DEFAULT CURRENT_TIMESTAMP(1),
@@ -35,13 +35,13 @@ CREATE TABLE `conversation` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Dumping data for table `conversation`
+-- Dumping data for table `CONVERSATION`
 --
 
-LOCK TABLES `conversation` WRITE;
-/*!40000 ALTER TABLE `conversation` DISABLE KEYS */;
-INSERT INTO `conversation` VALUES ('044d1778-f760-11e8-b05c-2c600c8aa83e','3bb2e85e-f75c-11e8-b05c-2c600c8aa83e','2018-12-04 01:00:20.0','b8fc05d2-f739-11e8-b05c-2c600c8aa83e');
-/*!40000 ALTER TABLE `conversation` ENABLE KEYS */;
+LOCK TABLES `CONVERSATION` WRITE;
+/*!40000 ALTER TABLE `CONVERSATION` DISABLE KEYS */;
+INSERT INTO `CONVERSATION` VALUES ('044d1778-f760-11e8-b05c-2c600c8aa83e','3bb2e85e-f75c-11e8-b05c-2c600c8aa83e','2018-12-04 01:00:20.0','b8fc05d2-f739-11e8-b05c-2c600c8aa83e');
+/*!40000 ALTER TABLE `CONVERSATION` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
 /*!50003 SET @saved_cs_results     = @@character_set_results */ ;

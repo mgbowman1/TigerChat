@@ -36,7 +36,7 @@ public class SocketConnection extends Processor {
 				super.handleSendMessage(values.get("conversationID"), values.get("message").getBytes("UTF-8"));
 				break;
 			case FIL:
-				super.handleSendFile(values.get("conversationID"), values.get("file").getBytes("UTF-8"));
+				super.handleSendFile(values.get("conversationID"), Integer.parseInt(values.get("size")), values.get("name"), values.get("file").getBytes("UTF-8"));
 				break;
 			case RQM:
 				this.serverSocket.addSend(new TTPPacket(super.handleGetMessageBlock(values.get("conversationID"), Integer.parseInt(values.get("messageBlockNumber")))));

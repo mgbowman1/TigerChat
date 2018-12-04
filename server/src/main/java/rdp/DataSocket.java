@@ -110,7 +110,7 @@ public class DataSocket extends Thread {
 					if (rdp == null) break;
 					else {
 						if (rdp.getAcknowledgement() > 0) processAck(rdp.getAcknowledgement(), rdp.getSequence());
-						if (rdp.getData().length > 0) {
+						if (rdp.getLength() > 0) {
 							TTPPacket ttp = rdp.getTTPPacket();
 							if (ttp.getFlag() == FlagType.CON) this.receivedSequences.add(-rdp.getSequence());
 							else this.receivedSequences.add(rdp.getSequence());
@@ -249,6 +249,7 @@ public class DataSocket extends Thread {
 			byte[][] data = Utility.splitBytesData(bytes, this.MAXDATAGRAMDATASIZE - 1);
 			RDPDatagram.resetSequenceIfLarger(data.length);
 			for (int i = 0; i < data.length; i++) {
+				if (i > 0) data[i] = Utility.mergeBytes(new byte[] {bytes[0]}, data[i]);
 				TTPPacket t = new TTPPacket(data[i]);
 				Integer ack = this.receivedSequences.poll();
 				if (ack == null) ack = 0;
@@ -328,7 +329,7 @@ public class DataSocket extends Thread {
 		private byte[] data;
 		
 		public FragmentedDatagram(int start, int end) {
-			this.numDatagramsNeeded = end - start;
+			this.numDatagramsNeeded = end - start + 1;
 			this.data = new byte[this.numDatagramsNeeded * MAXDATAGRAMDATASIZE];
 		}
 		

@@ -8,7 +8,7 @@ import utility
 
 MAX_PENDING_DATAGRAMS = 210
 MAX_DATAGRAM_SIZE = 504-16
-HOSTADDRESS = QHostAddress('10.102.141.189')
+HOSTADDRESS = QHostAddress('127.0.0.1')
 
 
 class DataSocket(QThread):
@@ -154,23 +154,32 @@ class DataSocket(QThread):
         bites = datagram.get_bytes()
         self.socket.writeDatagram(bites, HOSTADDRESS, self.serverport)
 
-    def add_send(self, ttp):
-        bites = ttp.get_bytes()
+    def add_send(self, ttppacket):
+        bites = ttppacket.get_bytes()
         if (len(bites) > MAX_DATAGRAM_SIZE):
             data = utility.split_bytes_data(bites, MAX_DATAGRAM_SIZE - 1)
+            start = 0
+            end = 0
             reset_sequence_if_larger(len(data))
             for i in range(len(data)):
-                t = ttp.TTP_packet(data[i])
+                if i > 0:
+                    data[i] = bites[0:1] + data[i]
+                t = ttp.TTP_packet(bytes_arr=data[i])
                 ack = 0
                 if len(self._received_sequences) > 0:
                     ack = self._received_sequences.popleft()
-                r = RDP_Datagram(acknowledgement=ack, frag_distance=len(data), packet=t)
+                if i == 0:
+                    r = RDP_Datagram(acknowledgement=ack, frag_distance=len(data) - 1, packet=t)
+                    start = r.head
+                    end = r.tail
+                else:
+                    r = RDP_Datagram(acknowledgement=ack, head=start, tail=end, packet=t)
                 self._datagram_send_list.append(r)
         else:
             ack = 0
             if len(self._received_sequences) > 0:
                 ack = self._received_sequences.popleft()
-            self._datagram_send_list.append(RDP_Datagram(acknowledgement=ack, packet=ttp))
+            self._datagram_send_list.append(RDP_Datagram(acknowledgement=ack, packet=ttppacket))
 
     def resend(self, pd):
         pd.dup_ack = 0

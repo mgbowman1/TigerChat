@@ -1,5 +1,6 @@
 import utility
 import struct
+from datetime import datetime
 
 FLAG_TYPE = [
     "MSG",
@@ -14,8 +15,9 @@ FLAG_TYPE = [
 
 
 class TTP_packet():
-    def __init__(self, bytes_arr=b'', flag=0, sender_id="", conversation_id="", timestamp="", message="", file_name="", size=0, message_block_number=0, file_id=0, received_percentage=0, username="", password="", username_arr=[]):
+    def __init__(self, bytes_arr=b'', flag=0, sender_id="", conversation_id="", message="", file_name="", size=0, message_block_number=0, file_id=0, received_percentage=0, username="", password="", username_arr=[]):
         self.DELIM = '|'.encode("utf-8")
+        timestamp = str(datetime.now())[:-7]
         if len(bytes_arr) > 0:
             self.flag = struct.unpack("<B", bytes_arr[0:1])[0]
             self.data = bytes_arr[1:]
@@ -31,10 +33,14 @@ class TTP_packet():
                                     self.DELIM,
                                     timestamp.encode("utf-8"),
                                     self.DELIM,
-                                    message.enncode("utf-8")])
+                                    message.encode("utf-8")])
             elif s == "FIL":
                 self.data = b"".join([
                                     conversation_id.encode("utf-8"),
+                                    self.DELIM,
+                                    str(size).encode(),
+                                    self.DELIM,
+                                    file_name.encode(),
                                     self.DELIM,
                                     message.encode("utf-8")])
             elif s == "INF":
@@ -52,12 +58,12 @@ class TTP_packet():
                 self.data = b"".join([
                                     conversation_id.encode("utf-8"),
                                     self.DELIM,
-                                    utility.int_to_byte(message_block_number)])
+                                    str(message_block_number).encode()])
             elif s == "FRG":
                 self.data = b"".join([
-                                    utility.int_to_byte(file_id),
+                                    str(file_id).encode(),
                                     self.DELIM,
-                                    utility.int_to_byte(received_percentage)])
+                                    str(received_percentage).encode()])
             elif s == "CON":
                 self.data = b"".join(
                                     [
