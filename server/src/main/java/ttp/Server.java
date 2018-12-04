@@ -63,6 +63,7 @@ public class Server extends Processor {
 						SocketConnection sc = new SocketConnection(Server.currentPort++, id);
 						DataSocket ds = new DataSocket(sc);
 						sc.setServerSocket(ds);
+						sc.setConnection(this.serverSocket.getAddress(), this.serverSocket.getPort());
 						connections.put(id, ds);
 						es.execute(ds);
 						this.serverSocket.addSend(new TTPPacket(id, true));

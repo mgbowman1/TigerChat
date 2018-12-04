@@ -78,3 +78,11 @@ class TTP_packet():
 
     def get_bytes(self):
         return struct.pack("<B", self.flag) + self.data
+
+    def get_message(self):
+        s = self.data.decode()
+        s_arr = s.split("|")
+        self.sender_id = s_arr[0]
+        self.conversation_id = s_arr[1]
+        self.timestamp = s_arr[2]
+        self.message = s_arr[3]

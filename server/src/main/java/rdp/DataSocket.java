@@ -78,6 +78,19 @@ public class DataSocket extends Thread {
 	// Whether the thread shoould keep running
 	private boolean running = true;
 	
+	public void setConnection(InetAddress address, int port) {
+		this.sendAddress = address;
+		this.sendPort = port;
+	}
+	
+	public InetAddress getAddress() {
+		return this.sendAddress;
+	}
+	
+	public int getPort() {
+		return this.sendPort;
+	}
+	
 	public DataSocket(Processor reader) throws SocketException {
 		this.pendingSentDatagrams = new LinkedList<>();
 		this.datagramSendList = new LinkedList<>();
@@ -239,6 +252,7 @@ public class DataSocket extends Thread {
 		byte[] bytes = rdp.getBytes();
 		System.out.println("sending");
 		System.out.println(rdp);
+		System.out.println(this.sendPort + " " + this.sendAddress);
 		this.socket.send(new DatagramPacket(bytes, bytes.length, this.sendAddress, this.sendPort));
 	}
 	

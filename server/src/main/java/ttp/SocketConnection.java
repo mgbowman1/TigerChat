@@ -1,6 +1,7 @@
 package ttp;
 
 import java.io.UnsupportedEncodingException;
+import java.net.InetAddress;
 import java.sql.SQLException;
 import java.util.HashMap;
 
@@ -19,6 +20,10 @@ public class SocketConnection extends Processor {
 	
 	public void setServerSocket(DataSocket serverSocket) {
 		this.serverSocket = serverSocket;
+	}
+	
+	public void setConnection(InetAddress address, int port) {
+		this.serverSocket.setConnection(address, port);
 	}
 
 	@Override
