@@ -2,22 +2,27 @@ from PyQt5.QtCore import QThread, pyqtSignal
 from DataSocket import DataSocket as socket
 import TTP_packet as ttp
 import utility
-import traceback
-import time
 
 
 class MessageWorker(QThread):
 
-    conn_est = pyqtSignal(str)
-    msg_sent = pyqtSignal(str)
+    conn_est = pyqtSignal()
+    msg_sent = pyqtSignal()
+    msg_received = pyqtSignal(object)
+    convo_id = '044d1778-f760-11e8-b05c-2c600c8aa83e'
 
-    def __init__(self):
-        QThread.__init__(self)
+    def __init__(self, parent):
+        QThread.__init__(self, parent)
 
-    def connect(self):
-        syn = ttp.TTP_packet(flag=5, username='test', password='test')
+    def connect_to_server(self, user, passw):
+        syn = ttp.TTP_packet(flag=5, username=user, password=passw)
         self.loggedin = False
         self.socket.add_send(syn)
+
+    def send_message(self, msg):
+        msg_packet = ttp.TTP_packet(flag=0, sender_id=self.identification, conversation_id=self.convo_id, message=msg)
+        self.socket.add_send(msg_packet)
+        self.msg_sent.emit()
 
     def receive(self, ttppacket):
         if (ttp.FLAG_TYPE[ttppacket.flag] == 'CON' and not self.loggedin):
@@ -30,17 +35,13 @@ class MessageWorker(QThread):
             port = utility.byte_to_int(ttppacket.data, 0)
             self.socket.socket.setPeerPort(port)
             self.socket.serverport = port
-
-            try:
-                self.socket.add_send(ttp.TTP_packet(sender_id=self.identification, conversation_id='044d1778-f760-11e8-b05c-2c600c8aa83e', message='a'*513))
-                time.sleep(.5)
-                convo = ttp.TTP_packet(flag=3, conversation_id='044d1778-f760-11e8-b05c-2c600c8aa83e', message_block_number=0)
-            except Exception as e:
-                traceback.print_exc()
-            self.socket.add_send(convo)
+            self.conn_est.emit()
+        elif (ttp.FLAG_TYPE[ttppacket.flag] == 'CCV'):
+            self.convo_id = ttppacket.data.decode()
+        elif (ttp.FLAG_TYPE[ttppacket.flag] == 'MSG'):
+            self.msg_received.emit((ttp.sender_id, ttp.timestamp, ttp.message))
         print(ttppacket.data.decode())
 
     def run(self):
         self.socket = socket(self)
         self.socket.start()
-        self.connect()

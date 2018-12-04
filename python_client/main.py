@@ -5,9 +5,10 @@ from PyQt5.QtWidgets import (QApplication, QLineEdit, QMainWindow, QPushButton,
                              QHBoxLayout, QDockWidget, QLabel, QMessageBox,
                              QListWidget, QTextEdit, QVBoxLayout, QWidget,
                              QInputDialog, QFileDialog, QAction)
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, pyqtSignal
 from PyQt5.QtGui import QIcon
 from message_worker import MessageWorker
+import time
 
 
 class chatHistory(QTextEdit):
@@ -102,10 +103,13 @@ class chatWindow(QMainWindow):
         # start all
         self.text_box.setFocus()
         self.show()
-        # self.login_window()
-        self.m_thread = MessageWorker()
+        self.login_window()
+        self.m_thread = MessageWorker(self)
         self.m_thread.start()
-        # self.m_thread.conn_est.connect(self.connection_established)
+        time.sleep(.5)
+        self.m_thread.connect_to_server(self.username_string, self.password_string)
+        self.m_thread.conn_est.connect(self.connection_established)
+        self.m_thread.msg_received.connect(self.message_received)
 
     def send_clicked(self):
         msg = self.text_box.text()
@@ -121,7 +125,7 @@ class chatWindow(QMainWindow):
                 # if mesg within 5 min, no new time stamp
                 now = dt.today()
                 diff = now - self.conversation_history.last_msg
-                if ((diff.total_seconds() * 1000) > 30000):
+                if ((diff.total_seconds() * 1000) > 300000):
                     nowfmt = dt.today().strftime('%d, %b %Y at %H:%M')
                     self.conversation_history.append('\n' + nowfmt)
                     self.conversation_history.setAlignment(Qt.AlignCenter)
@@ -131,8 +135,8 @@ class chatWindow(QMainWindow):
                 self.text_box.clear()
                 self.text_box.setFocus()
                 self.statusBar().showMessage("Sending message")
-                # self.m_thread.sendMessage(msg)
-                # self.m_thread.msg_sent.connect(self.message_delivered)
+                self.m_thread.send_message(msg)
+                self.m_thread.msg_sent.connect(self.message_delivered)
 
     def keyPressEvent(self, QKeyEvent):
         if (QKeyEvent.key() == Qt.Key_Return):
@@ -144,26 +148,39 @@ class chatWindow(QMainWindow):
             self.text_box.resize(260, 80)
 
     def connection_established(self):
-        self.statusBar().showMessage("Connected.")
+        self.statusBar().showMessage("Connected")
+
+    def message_received(self, msg):
+        sender = msg[0]
+        timestamp = msg[1]
+        messg = msg[2]
+
+        disp_msg = sender + ': ' + messg
+        self.conversation_history.append(timestamp)
+        self.conversation_history.append(disp_msg)
 
     def message_delivered(self):
-        self.statusBar().showMessage("Message delivered.", 3000)
+        self.statusBar().showMessage("Message delivered", 3000)
 
     def login_window(self):
         self.input_label = "Please enter your username"
         self.username_response = QInputDialog.getText(
                             self, "Login", self.input_label)
         self.username_string = self.username_response[0]
-        if ('|' in self.username_string):
+        if (not self.username_response[1] or '|' in self.username_string):
             self.login_error("username")
+            return
 
         self.input_label = "Please enter your password"
         self.password_response = QInputDialog.getText(
                                 self, "Password", self.input_label,
                                 QLineEdit.Password)
         self.password_string = self.password_response[0]
+        if (not self.password_response[1]):
+            exit(0)
         if ("|" in self.password_string):
             self.login_error("password")
+            return
 
     def login_error(self, value):
         self.login_button = QPushButton(self)

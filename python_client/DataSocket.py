@@ -9,6 +9,7 @@ import utility
 MAX_PENDING_DATAGRAMS = 210
 MAX_DATAGRAM_SIZE = 504-16
 HOSTADDRESS = QHostAddress('127.0.0.1')
+HOSTADDRESS = QHostAddress('10.101.232.30')
 
 
 class DataSocket(QThread):
