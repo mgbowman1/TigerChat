@@ -153,6 +153,7 @@ class DataSocket(QThread):
 
     def send(self, datagram):  # send a datagram
         bites = datagram.get_bytes()
+        print(bites)
         self.socket.writeDatagram(bites, HOSTADDRESS, self.serverport)
 
     def add_send(self, ttppacket):

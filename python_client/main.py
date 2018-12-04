@@ -59,7 +59,6 @@ class chatWindow(QMainWindow):
         self.text_box.resize(260, 40)
         self.text_box.setMinimumWidth(100)
         self.text_box.setMaxLength(2000)
-        self.text_box.textEdited.connect(self.resize_editor)
         self.sendButton = QPushButton(self)
         self.sendButton.setText('SEND')
         self.sendButton.clicked.connect(self.send_clicked)
@@ -110,6 +109,9 @@ class chatWindow(QMainWindow):
         self.m_thread.connect_to_server(self.username_string, self.password_string)
         self.m_thread.conn_est.connect(self.connection_established)
         self.m_thread.msg_received.connect(self.message_received)
+        self.m_thread.msg_sent.connect(self.message_delivered)
+        self.m_thread.time_out.connect(self.time_out)
+        self.m_thread.reconnected.connect(self.reconnected)
 
     def send_clicked(self):
         msg = self.text_box.text()
@@ -136,16 +138,10 @@ class chatWindow(QMainWindow):
                 self.text_box.setFocus()
                 self.statusBar().showMessage("Sending message")
                 self.m_thread.send_message(msg)
-                self.m_thread.msg_sent.connect(self.message_delivered)
 
     def keyPressEvent(self, QKeyEvent):
         if (QKeyEvent.key() == Qt.Key_Return):
             self.send_clicked()
-
-    def resize_editor(self):
-        self.line_length = len(self.text_box.text())
-        if (self.line_length > 47 and self.text_box.height() < 80):
-            self.text_box.resize(260, 80)
 
     def connection_established(self):
         self.statusBar().showMessage("Connected")
@@ -160,7 +156,7 @@ class chatWindow(QMainWindow):
         self.conversation_history.append(disp_msg)
 
     def message_delivered(self):
-        self.statusBar().showMessage("Message delivered", 3000)
+        self.statusBar().showMessage("Message delivered", 1500)
 
     def login_window(self):
         self.input_label = "Please enter your username"
@@ -202,9 +198,24 @@ class chatWindow(QMainWindow):
         else:
             exit(0)
 
+    def time_out(self):
+        self.sendButton.setDisabled(True)
+        self.statusBar().showMessage('Reconnecting...')
+        self.text_box.setDisabled(True)
+
+    def reconnected(self):
+        self.sendButton.setEnabled(True)
+        self.statusBar().showMessage('Reconnected', 1000)
+        self.text_box.setEnabled(True)
+
     def file_upload_clicked(self):
         self.file_name = QFileDialog.getOpenFileName(self, "Choose a file")
-        print(self.file_name)
+        self.file_name = self.file_name[0]
+        self.file_name = self.file_name.split('/')[-1]
+        with open(self.file_name, 'r') as file:
+            file_buffer = file.read()
+            file_size = len(file_buffer)
+            self.m_thread.send_file(file_size, self.file_name, file_buffer)
 
 
 def start():
