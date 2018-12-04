@@ -5,7 +5,7 @@ from PyQt5.QtWidgets import (QApplication, QLineEdit, QMainWindow, QPushButton,
                              QHBoxLayout, QDockWidget, QLabel, QMessageBox,
                              QListWidget, QTextEdit, QVBoxLayout, QWidget,
                              QInputDialog, QFileDialog, QAction)
-from PyQt5.QtCore import Qt, pyqtSignal
+from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QIcon
 from message_worker import MessageWorker
 import time

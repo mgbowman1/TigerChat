@@ -22,7 +22,10 @@ class MessageWorker(QThread):
     def send_message(self, msg):
         msg_packet = ttp.TTP_packet(flag=0, sender_id=self.identification, conversation_id=self.convo_id, message=msg)
         self.socket.add_send(msg_packet)
-        self.msg_sent.emit()
+        try:
+            self.msg_sent.emit()
+        except Exception as e:
+            print(e)
 
     def receive(self, ttppacket):
         if (ttp.FLAG_TYPE[ttppacket.flag] == 'CON' and not self.loggedin):
@@ -39,8 +42,9 @@ class MessageWorker(QThread):
         elif (ttp.FLAG_TYPE[ttppacket.flag] == 'CCV'):
             self.convo_id = ttppacket.data.decode()
         elif (ttp.FLAG_TYPE[ttppacket.flag] == 'MSG'):
-            self.msg_received.emit((ttp.sender_id, ttp.timestamp, ttp.message))
-        print(ttppacket.data.decode())
+            ttppacket.get_message()
+            self.msg_received.emit((ttppacket.sender_id, ttppacket.timestamp, ttppacket.message))
+        # print(ttppacket.data.decode())
 
     def run(self):
         self.socket = socket(self)
