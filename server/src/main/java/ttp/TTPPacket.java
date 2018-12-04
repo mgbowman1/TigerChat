@@ -57,6 +57,22 @@ public class TTPPacket {
 		}
 	}
 	
+	public TTPPacket(String senderID, String conversationID, String timestamp, String file, boolean fileType) {
+		this.flag = FlagType.FIL;
+		try {
+			this.data = Utility.mergeBytes(new byte[][] {
+				senderID.getBytes("UTF-8"),
+				DELIMARR,
+				conversationID.getBytes("UTF-8"),
+				DELIMARR,
+				timestamp.getBytes("UTF-8"),
+				DELIMARR,
+				file.getBytes("UTF-8")});
+		} catch (UnsupportedEncodingException e) {
+			e.printStackTrace();
+		}
+	}
+	
 	// Missing RQM for client
 	
 	// RQM

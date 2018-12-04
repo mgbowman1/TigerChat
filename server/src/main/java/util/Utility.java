@@ -5,6 +5,7 @@ public class Utility {
 	public static int byteToInt(byte[] arr, int offset) {
 		int total = 0;
 		for (int i = 0; i < 4; i++) {
+			if (arr[i + offset] < 0) arr[i + offset] = (byte) (256 - arr[i + offset]);
 			total += arr[i + offset] << 8 * i;
 		}
 		return total;
@@ -57,6 +58,7 @@ public class Utility {
 	}
 	
 	public static byte[] splitBytes(byte[] arr, int begin, int end) {
+		if (end - begin < 0) return new byte[0];
 		byte[] ret = new byte[end - begin];
 		for (int i = 0; i < ret.length; i++) {
 			ret[i] = arr[i + begin];

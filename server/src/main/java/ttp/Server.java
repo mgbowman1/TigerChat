@@ -45,6 +45,7 @@ public class Server extends Processor {
 		for (ServerSendPackets s : sendPackets) {
 			if (connections.containsKey(s.user)) connections.get(s.user).addSend(s.packet);
 		}
+		sendPackets.clear();
 	}
 
 	@Override

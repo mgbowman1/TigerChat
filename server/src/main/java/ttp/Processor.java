@@ -63,6 +63,7 @@ public abstract class Processor {
 		String timestamp = getTimestamp();
 		ArrayList<String> ids = handleGetConversationUsers(conversationID);
 		for (int i = 0; i < ids.size(); i++) {
+			System.out.println("-------------" + ids.get(i) + "   " + this.userID + "   " + ids.get(i).equals(this.userID));
 			if (!ids.get(i).equals(this.userID)) {
 				try {
 					TTPPacket ttp = new TTPPacket(this.userID, conversationID, timestamp, new String(message, "UTF-8"));
@@ -88,7 +89,7 @@ public abstract class Processor {
 		return res;
 	}
 	
-	protected void handleSendFile(String conversationID, int size, String name, byte[] file) throws SQLException {
+	protected void handleSendFile(String conversationID, int size, String name, byte[] file) throws SQLException, UnsupportedEncodingException {
 		sendFile.setString(1, conversationID);
 		sendFile.setBlob(2, getBlob(file));
 		sendFile.setString(3, this.userID);
@@ -97,7 +98,7 @@ public abstract class Processor {
 		ArrayList<String> ids = handleGetConversationUsers(conversationID);
 		for (int i = 0; i < ids.size();i ++) {
 			if (!ids.get(i).equals(this.userID)) {
-				TTPPacket ttp = new TTPPacket(this.userID, conversationID, timestamp, name, size);
+				TTPPacket ttp = new TTPPacket(this.userID, conversationID, timestamp, new String(file, "UTF-8"), true);
 				Server.addPacket(ids.get(i), ttp);
 			}
 		}
